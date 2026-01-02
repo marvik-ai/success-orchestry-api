@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_local
+    restart: always
+    environment:
+      POSTGRES_USER: USER
+      POSTGRES_PASSWORD: password1234
+      POSTGRES_DB: SampleApi
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: fastapi_backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://USER:password1234@db:5432/SampleApi
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
