@@ -1,0 +1,44 @@
+[tool.ruff]
+# Configuración global
+line-length = 100
+target-version = "py314"
+# Evita procesar dependencias y migraciones
+extend-exclude = ["alembic", "venv", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
+# Seleccionamos las mejores reglas del mercado
+# E/W: Estilo, F: Errores, I: Orden imports, N: Nombres, D: Comentarios, UP: Modernización, B: Prevención bugs
+select = ["E", "W", "F", "I", "N", "D", "UP", "B"]
+
+ignore = [
+    "D100", # No exige comentario al inicio de cada archivo
+    "D104", # No exige comentario en carpetas (__init__.py)
+    "D107", # No exige comentario en el constructor __init__ (ideal para Pydantic)
+    "B008", # Permite declarar dependencias en FastAPI (ej. Depends())
+]
+
+[tool.ruff.lint.pydocstyle]
+# Volvemos a activar Google Style (esencial para Swagger)
+convention = "google"
+
+[tool.ruff.format]
+# Alineación total con Prettier
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+# Orden de imports como en tu ESLint
+combine-as-imports = true
+lines-between-types = 1
+known-first-party = ["app"]
+
+[tool.mypy]
+# El "TypeScript" del Backend
+python_version = "3.14"
+strict = true
+ignore_missing_imports = true
+# Ignoramos alembic para que las migraciones no rompan el chequeo
+exclude = ["alembic", "venv", ".venv"]
+# Plugin esencial para que Mypy entienda los modelos de Pydantic/SQLModel
+plugins = ["pydantic.mypy"]
