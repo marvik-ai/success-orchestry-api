@@ -1,13 +1,29 @@
-# Setup and Run
+# Success Orchestry API
+
+## Introduction
+Success Orchestry API is a FastAPI service template designed to be simple to start and easy to scale. It follows a clear separation of concerns so new features can be added without mixing responsibilities.
+Current implemented domains: Health and Employee.
+
+## Architecture Overview
+- Controllers: Define HTTP routes, request/response handling, and dependency wiring.
+- Services: Contain business logic and orchestrate use cases.
+- Repositories: Handle database access and persistence.
+- Models: Define domain and API data structures.
+- Common: Shared configuration, logging, and database setup.
+Project code lives under `src/`.
+
+## Setup and Run
 ## 1. Prerequisites
   Docker Desktop installed.
   Python 3.14.2 installed locally.
   A DB client like DBeaver (optional).
+  Copy `.env.example` to `.env` and update values as needed.
 
 ## 2. Option A: Local Development (Recommended)
   Ideal for live code changes with hot-reload.
   ### Step 1: Start the database in Docker
     docker-compose up -d db
+    # or: make db-up
   ### Step 2: Set up the virtual environment
   #### Create the environment
       python -m venv venv
@@ -18,22 +34,34 @@
   ### Step 3: Install dependencies
     pip install -r requirements.txt
   ### Step 4: Run the application
-    uvicorn app.main:app --reload
+    uvicorn main:app --reload --app-dir src
+    # or: make run (uses venv/bin/uvicorn)
 
-Access: http://localhost:8000
+  ### Alternative: Use Makefile for local API + Docker DB
+    make db-up
+    make run
+
+  Access: http://localhost:8000
 
 ## 3. Option B: Full Docker Run
   To bring up the full stack (API + database) in isolation:
   docker-compose up --build
+  # or: make docker-up
+
+  ### Alternative: Use Makefile for full Docker
+    make docker-up
 
 ## 4. Code Quality
   ### Development dependencies (Python)
     pip install -r requirements-dev.txt
+    # or: make install-dev (uses venv/bin/pip)
   ### Linting and formatting (Python)
     ruff check .
     black .
     mypy app
-  ### Frontend tooling (Husky, ESLint, Prettier)
-    npm install
-    npm run lint
-    npm run format
+    # or: make lint, make format, make typecheck
+
+## 5. Tests
+  ### Run tests
+    pytest
+    # or: make test
