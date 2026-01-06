@@ -2,7 +2,7 @@ from collections.abc import Generator
 
 from sqlmodel import Session, SQLModel, create_engine
 
-from common.config import settings
+from src.common.config import settings
 
 # 1. Database URL configuration
 DATABASE_URL = settings.database_url

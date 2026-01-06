@@ -46,5 +46,4 @@ strict = true
 ignore_missing_imports = true
 exclude = ["alembic", "venv", ".venv"]
 plugins = ["pydantic.mypy"]
-mypy_path = "src"
 explicit_package_bases = true
