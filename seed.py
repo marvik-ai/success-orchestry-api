@@ -1,6 +1,6 @@
 import typer
 
-from src.src.utils.employees_seed_factory import seed_employees
+from src.utils.employees_seed_factory import seed_employees
 
 app = typer.Typer()
 
