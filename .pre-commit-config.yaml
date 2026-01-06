@@ -1,0 +1,44 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  # Linter & Formatter (Replaces the npm run lint/prettier logic)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: [ --fix ]
+      - id: ruff-format
+
+  # Type Checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1 # Note: Consider updating this to a newer version for Python 3.14
+    hooks:
+      - id: mypy
+        # Add fastapi here so mypy understands the @router decorators
+        additional_dependencies: [pydantic, sqlmodel, fastapi]
+        stages: [pre-commit]
+
+  # Commit Message Validation (Replaces .husky/commit-msg)
+  - repo: local
+    hooks:
+      - id: check-commit-msg
+        name: Check Commit Message Format
+        entry: |
+          python3 -c "
+          import sys, re;
+          msg = open(sys.argv[1]).read().strip();
+          pattern = r'^[A-Z]+-[0-9]+\s(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\([^)]+\))?:\s.+$';
+          is_valid = bool(re.match(pattern, msg));
+          if not is_valid:
+              print('✖ Commit message inválido.\nFormato esperado: TICKET TYPE: descripción\nEjemplo: ABC-123 feat: add login');
+          sys.exit(0 if is_valid else 1)
+          "
+        language: system
+        stages: [commit-msg]
+        args: []

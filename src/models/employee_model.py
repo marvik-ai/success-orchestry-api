@@ -11,6 +11,8 @@ from sqlalchemy import Column, String, DECIMAL, text
 class EmployeeStatus(str, PyEnum):
     ACTIVE = "active"
     INACTIVE = "inactive"
+from sqlmodel import Field, SQLModel
+
 
 class EmployeeBase(SQLModel):
     employee_code: str
@@ -18,10 +20,12 @@ class EmployeeBase(SQLModel):
     current_position_id: Optional[uuid.UUID] = Field(foreign_key="positions.id")
 
 
+
 class EmployeeCreate(EmployeeBase):
     # Nothing to add. Inherits name, country_id, etc.
     # Without an 'id', the user cannot send the failing "id: 0".
     pass
+
 
 class Employee(EmployeeBase, table=True):
     # The table class inherits base fields and adds DB-specific fields
@@ -85,3 +89,4 @@ class EmployeeFinancialInfo(SQLModel, table=True):
 
     # Relación inversa
     employee: Optional[Employee] = Relationship(back_populates="financial_info")
+    id: int | None = Field(default=None, primary_key=True)

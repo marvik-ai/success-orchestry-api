@@ -1,5 +1,5 @@
-from repositories.EmployeeRepository import EmployeeRepositoryClass
+from repositories.employee_repository import EmployeeRepositoryClass
 
 __all__ = [
-    "EmployeeRepositoryClass",
+    'EmployeeRepositoryClass',
 ]
