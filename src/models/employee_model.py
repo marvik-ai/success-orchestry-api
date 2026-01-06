@@ -1,10 +1,11 @@
 import uuid
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import Optional
+from typing import Any, Optional
 
-from sqlalchemy import Column, String
+from sqlalchemy import DECIMAL, Column, String
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -38,9 +39,9 @@ class Employee(EmployeeBase, table=True):
     personal_info: Optional['EmployeePersonalInfo'] = Relationship(
         back_populates='employee', sa_relationship_kwargs={'uselist': False}
     )
-    # financial_info: Optional['EmployeeFinancialInfo'] = Relationship(
-    #    back_populates='employee', sa_relationship_kwargs={'uselist': False}
-    # )
+    financial_info: Optional['EmployeeFinancialInfo'] = Relationship(
+        back_populates='employee', sa_relationship_kwargs={'uselist': False}
+    )
 
 
 class EmployeePersonalInfo(SQLModel, table=True):
@@ -69,3 +70,24 @@ class EmployeePersonalInfo(SQLModel, table=True):
 
     # Relación inversa
     employee: Employee | None = Relationship(back_populates='personal_info')
+
+
+class EmployeeFinancialInfo(SQLModel, table=True):
+    __tablename__ = 'employee_financial_info'
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    employee_id: uuid.UUID = Field(foreign_key='employee.id', nullable=False)
+
+    salary_amount: Decimal = Field(default=0, sa_column=Column[Any](DECIMAL, nullable=False))
+    salary_currency_id: uuid.UUID = Field(nullable=False)
+
+    company_cost_amount: Decimal = Field(default=0, sa_column=Column(DECIMAL, nullable=False))
+
+    effective_from: date = Field(nullable=False)
+    effective_to: date | None = Field(default=None, description='NULL = registro actual')
+
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # Relación inversa
+    employee: Employee | None = Relationship(back_populates='financial_info')
