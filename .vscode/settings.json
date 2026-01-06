@@ -1,0 +1,21 @@
+{
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll.ruff": "explicit",
+        "source.organizeImports.ruff": "explicit"
+      }
+    },
+    "python.analysis.fixAll": ["source.unusedImports"],
+    "ruff.nativeServer": true,
+
+    // 🙈 OCULTAR CARPETAS DE CACHE Y VENV EN LA BARRA LATERAL
+    "files.exclude": {
+      "**/.pytest_cache": true,
+      "**/.ruff_cache": true,
+      "**/.mypy_cache": true,
+      "**/__pycache__": true,
+      ".venv": false
+    }
+  }

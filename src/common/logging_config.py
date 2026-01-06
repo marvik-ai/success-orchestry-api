@@ -10,7 +10,7 @@ def configure_logging() -> None:
 
     logging.basicConfig(
         level=log_level,
-        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        format='%(asctime)s %(levelname)s [%(name)s] %(message)s',
         handlers=[
             logging.FileHandler(settings.log_file),
             logging.StreamHandler(),

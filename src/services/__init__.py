@@ -1,7 +1,7 @@
-from services.EmployeeService import EmployeeService
-from services.HealthService import HealthService
+from services.employee_service import EmployeeService
+from services.health_service import HealthService
 
 __all__ = [
-    "EmployeeService",
-    "HealthService",
+    'EmployeeService',
+    'HealthService',
 ]
