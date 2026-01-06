@@ -1,22 +1,18 @@
-"""Change_optional_id
+"""Change_optional_id.
 
 Revision ID: daa765486560
 Revises: 1cb6c4d4cafc
 Create Date: 2026-01-06 15:55:21.947802
 
 """
-from typing import Sequence, Union
 
-from alembic import op #type: ignore
-import sqlalchemy as sa
-import sqlmodel
-
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = 'daa765486560'
-down_revision: Union[str, Sequence[str], None] = '1cb6c4d4cafc'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = '1cb6c4d4cafc'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
