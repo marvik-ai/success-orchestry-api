@@ -28,7 +28,7 @@ class EmployeeCreate(EmployeeBase):
 
 class Employee(EmployeeBase, table=True):
     # The table class inherits base fields and adds DB-specific fields
-    id: uuid.UUID | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     notes: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(

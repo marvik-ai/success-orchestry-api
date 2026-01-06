@@ -61,3 +61,6 @@ ci: lint typecheck test
 db-migrate:
 	alembic revision --autogenerate -m $(name)
 	alembic upgrade head
+
+db-generate:
+	python seed.py all
