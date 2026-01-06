@@ -1,5 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session, SQLModel, create_engine
 
 # 1. Database URL configuration
 # If a Docker environment variable is set, use it; otherwise use localhost
@@ -11,10 +10,12 @@ DATABASE_URL = settings.database_url
 # echo=True prints all SQL queries in the console (useful for debugging)
 engine = create_engine(DATABASE_URL, echo=True)
 
+
 # 3. Function to create tables
 # This function reads all models that inherit from SQLModel (like your Employee class)
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+
 
 # 4. Session generator (Dependency Injection)
 # Used in controllers with Depends(get_session)

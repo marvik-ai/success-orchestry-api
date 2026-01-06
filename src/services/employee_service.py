@@ -1,5 +1,7 @@
-from models.EmployeeModel import Employee, EmployeeCreate
-from repositories.EmployeeRepository import EmployeeRepositoryClass
+from repositories.employee_repository import EmployeeRepositoryClass
+
+from models.employee_model import EmployeeCreate
+
 
 class EmployeeService:
     def __init__(self, emp_repo: EmployeeRepositoryClass):

@@ -3,9 +3,9 @@ import time
 
 from starlette.requests import Request
 
-logger = logging.getLogger("app.request")
+logger = logging.getLogger('app.request')
 
-SKIP_PATHS = {"/", "/health"}
+SKIP_PATHS = {'/', '/health'}
 
 
 async def log_requests(request: Request, call_next):
@@ -16,7 +16,7 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     duration_ms = (time.perf_counter() - start) * 1000
     logger.info(
-        "%s %s -> %s %.2fms",
+        '%s %s -> %s %.2fms',
         request.method,
         request.url.path,
         response.status_code,

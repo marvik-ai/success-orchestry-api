@@ -7,5 +7,5 @@ class HealthService:
         self.session = session
 
     def check(self) -> dict:
-        self.session.exec(text("SELECT 1"))
-        return {"status": "ok"}
+        self.session.exec(text('SELECT 1'))
+        return {'status': 'ok'}

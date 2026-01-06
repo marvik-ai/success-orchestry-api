@@ -1,24 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from services.health_service import HealthService
 from sqlmodel import Session
 
-from services.HealthService import HealthService
 from dependencies import get_db
 
-router = APIRouter(tags=["Health"])
+router = APIRouter(tags=['Health'])
+
 
 class HealthResponse(BaseModel):
     status: str
 
+
 @router.get(
-    "/health",
+    '/health',
     response_model=HealthResponse,
-    summary="Health check",
-    description="Checks database connectivity and returns API health status.",
+    summary='Health check',
+    description='Checks database connectivity and returns API health status.',
 )
 def health_check(session: Session = Depends(get_db)):
     service = HealthService(session)
     try:
         return service.check()
-    except Exception:
-        raise HTTPException(status_code=503, detail="Database unavailable")
+    except Exception as err:
+        raise HTTPException(
+            status_code=503,
+            detail='Database unavailable',
+        ) from err

@@ -22,14 +22,23 @@ repos:
       - id: mypy
         additional_dependencies: [pydantic, sqlmodel]
         # We run this on push usually, but here it's on commit for safety
-        stages: [commit]
+        stages: [pre-push]
 
   # Commit Message Validation (Replaces .husky/commit-msg)
   - repo: local
     hooks:
       - id: check-commit-msg
         name: Check Commit Message Format
-        entry: python3 -c "import sys, re; msg=open(sys.argv[1]).read(); pattern=r'^[A-Z]+-[0-9]+\s(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\([^)]+\))?:\s.+$'; sys.exit(0 if re.match(pattern, msg) else (print('✖ Commit message inválido.\nFormato esperado: TICKET TYPE: descripción\nEjemplo: ABC-123 feat: add login') or 1))"
+        entry: |
+          python3 -c "
+          import sys, re;
+          msg = open(sys.argv[1]).read().strip();
+          pattern = r'^[A-Z]+-[0-9]+\s(feat|fix|chore|docs|refactor|test|style|perf|ci|build|revert)(\([^)]+\))?:\s.+$';
+          is_valid = bool(re.match(pattern, msg));
+          if not is_valid:
+              print('✖ Commit message inválido.\nFormato esperado: TICKET TYPE: descripción\nEjemplo: ABC-123 feat: add login');
+          sys.exit(0 if is_valid else 1)
+          "
         language: system
         stages: [commit-msg]
         args: []
