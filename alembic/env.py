@@ -8,8 +8,9 @@ from sqlalchemy import pool
 from sqlmodel import SQLModel
 from dotenv import load_dotenv
 
-from alembic import context
+from alembic import context  # type: ignore
 
+from models.employee_model import Employee
 
 sys.path.append(os.getcwd())
 

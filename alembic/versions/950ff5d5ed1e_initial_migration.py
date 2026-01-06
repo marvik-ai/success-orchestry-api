@@ -1,13 +1,13 @@
 """initial_migration
 
 Revision ID: 950ff5d5ed1e
-Revises: 
+Revises:
 Create Date: 2026-01-06 11:44:17.709167
 
 """
 from typing import Sequence, Union
 
-from alembic import op
+from alembic import op #type: ignore
 import sqlalchemy as sa
 import sqlmodel
 

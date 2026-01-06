@@ -57,3 +57,7 @@ db-up:
 	docker-compose up -d db
 
 ci: lint typecheck test
+
+db-migrate:
+	alembic revision --autogenerate -m $(migration_name)
+	alembic upgrade head
