@@ -17,12 +17,12 @@ repos:
 
   # Type Checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.7.1 # Note: Consider updating this to a newer version for Python 3.14
     hooks:
       - id: mypy
-        additional_dependencies: [pydantic, sqlmodel]
-        # We run this on push usually, but here it's on commit for safety
-        stages: [pre-push]
+        # Add fastapi here so mypy understands the @router decorators
+        additional_dependencies: [pydantic, sqlmodel, fastapi]
+        stages: [pre-commit]
 
   # Commit Message Validation (Replaces .husky/commit-msg)
   - repo: local

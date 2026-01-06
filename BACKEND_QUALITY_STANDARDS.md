@@ -72,17 +72,6 @@ En este proyecto, **guardar el archivo no solo almacena los cambios**, sino que 
 
 ---
 
-## ⚡ Optimización del Ciclo de Feedback: Mypy a `pre-push`
-
-Hemos movido el chequeo de tipos (**Mypy**) del stage de `commit` al stage de `push`.
-
-### ✅ Agilidad en el desarrollo
-
-Ruff es instantáneo, pero Mypy analiza todo el árbol de dependencias y puede tardar varios segundos.
-Moverlo al `push` permite **commits locales inmediatos**.
-
----
-
 ## 🔄 Flujo de Trabajo de Desarrollo
 
 ### 1. Chequeos Automáticos (Git Hooks)

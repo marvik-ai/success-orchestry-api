@@ -18,7 +18,7 @@ class HealthResponse(BaseModel):
     summary='Health check',
     description='Checks database connectivity and returns API health status.',
 )
-def health_check(session: Session = Depends(get_db)):
+def health_check(session: Session = Depends(get_db)) -> dict[str, str]:
     service = HealthService(session)
     try:
         return service.check()

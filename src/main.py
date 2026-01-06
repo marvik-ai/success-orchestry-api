@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from common.config import settings
@@ -10,13 +11,12 @@ from router.router import router as api_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup actions (replaces startup event)
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    # Startup actions
     configure_logging()
     create_db_and_tables()
     yield
-    # Shutdown actions (replaces shutdown event)
-    pass
+    # Shutdown actions
 
 
 app = FastAPI(
@@ -25,7 +25,8 @@ app = FastAPI(
     version=settings.version,
     lifespan=lifespan,
 )
-# Add middleware to the application
+
+# Middleware configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -34,14 +35,14 @@ app.add_middleware(
     allow_headers=['*'],
     expose_headers=['*'],
 )
-# middleware
+
 app.middleware('http')(check_client_auth)
 app.middleware('http')(add_version_header)
 app.middleware('http')(log_requests)
-# Include routers
+
 app.include_router(api_router)
 
 
 @app.get('/', include_in_schema=False)
-def read_root():
+def read_root() -> dict[str, str]:
     return {'status': 'API is running'}
