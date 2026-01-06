@@ -1,7 +1,11 @@
+import uuid
+
 from datetime import UTC, datetime
 from enum import Enum as PyEnum
+from typing import Optional
 
-from sqlmodel import Field, SQLModel
+from sqlalchemy import Column, String
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class EmployeeStatus(str, PyEnum):
@@ -23,7 +27,7 @@ class EmployeeCreate(EmployeeBase):
 
 class Employee(EmployeeBase, table=True):
     # The table class inherits base fields and adds DB-specific fields
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID | None = Field(default=None, primary_key=True)
     notes: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(
@@ -31,9 +35,37 @@ class Employee(EmployeeBase, table=True):
         sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)},
     )
     deleted_at: datetime | None = Field(default=None)
-    # personal_info: Optional['EmployeePersonalInfo'] = Relationship(
-    #     back_populates='employee', sa_relationship_kwargs={'uselist': False}
-    # )
+    personal_info: Optional['EmployeePersonalInfo'] = Relationship(
+        back_populates='employee', sa_relationship_kwargs={'uselist': False}
+    )
     # financial_info: Optional['EmployeeFinancialInfo'] = Relationship(
     #    back_populates='employee', sa_relationship_kwargs={'uselist': False}
     # )
+
+
+class EmployeePersonalInfo(SQLModel, table=True):
+    __tablename__ = 'employees_personal_info'
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    # Relación 1 a 1 con Employee
+    employee_id: uuid.UUID = Field(foreign_key='employee.id', unique=True)
+    first_name: str = Field(max_length=100)
+    last_name: str = Field(max_length=100)
+    document_number: str | None = Field(default=None, max_length=20)
+    tax_id: str | None = Field(default=None, max_length=50)
+    gender: str | None = Field(default=None, max_length=20)
+    education_level: str | None = Field(default=None, max_length=50)
+
+    # Perfil editable
+    personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
+    phone: str | None = Field(default=None, max_length=50)
+    photo: str | None = Field(
+        default=None, max_length=100, description='URL o key de storage (S3/GCS)'
+    )
+    nickname: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=50)
+    country_id: uuid.UUID | None = Field(default=None)
+    address: str | None = Field(default=None, max_length=100)
+
+    # Relación inversa
+    employee: Employee | None = Relationship(back_populates='personal_info')

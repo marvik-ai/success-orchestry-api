@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 from alembic import context  # type: ignore
 
-from models.employee_model import Employee
+from models.employee_model import Employee, EmployeePersonalInfo
 
 sys.path.append(os.getcwd())
 
