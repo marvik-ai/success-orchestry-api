@@ -2,24 +2,19 @@ import random
 
 from decimal import Decimal
 
+from common.database import engine
 from polyfactory import Use
 from polyfactory.factories.pydantic_factory import ModelFactory
 from sqlmodel import Session, SQLModel
 
-from src.common.database import engine
-
 # --- Importa tus modelos y tu engine aquí ---
 # Asumo que tu archivo de modelos se llama 'employee_model.py' y tienes un 'database.py'
-from src.models.employee_model import (
+from models.employee_model import (
     Employee,
     EmployeeFinancialInfo,
     EmployeePersonalInfo,
     EmployeeStatus,
 )
-
-# ------------------------------------------------------------------
-# 1. Definición de Fábricas (Factories)
-# ------------------------------------------------------------------
 
 
 class EmployeeFactory(ModelFactory[Employee]):  # type: ignore[misc]

@@ -1,9 +1,8 @@
 from collections.abc import Awaitable, Callable
 
+from common.config import settings
 from starlette.requests import Request
 from starlette.responses import Response
-
-from src.common.config import settings
 
 
 async def add_version_header(

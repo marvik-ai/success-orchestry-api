@@ -1,14 +1,13 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+from common.config import settings
+from common.database import create_db_and_tables
+from common.logging_config import configure_logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from middleware import add_version_header, check_client_auth, log_requests
 from router.router import router as api_router
-
-from src.common.config import settings
-from src.common.database import create_db_and_tables
-from src.common.logging_config import configure_logging
 
 
 @asynccontextmanager

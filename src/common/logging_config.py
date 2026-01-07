@@ -1,7 +1,7 @@
 import logging
 import os
 
-from src.common.config import settings
+from common.config import settings
 
 
 def configure_logging() -> None:
