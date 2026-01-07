@@ -33,23 +33,29 @@ Project code lives under `src/`.
       .\venv\Scripts\activate
   ### Step 3: Install dependencies
     pip install -r requirements.txt
-  ### Step 4: Run the application
+  ### Step 4: Run the migrations
+    alembic upgrade head
+    # or: make db-migrate-run
+  ### Step 5: Run the application
     uvicorn main:app --reload --app-dir src
     # or: make run (uses venv/bin/uvicorn)
 
   ### Alternative: Use Makefile for local API + Docker DB
     make db-up
+    make db-migrate-run
     make run
 
   Access: http://localhost:8000
 
 ## 3. Option B: Full Docker Run
   To bring up the full stack (API + database) in isolation:
-  docker-compose up --build
-  # or: make docker-up
+  1. docker-compose up --build
+    # or: make docker-up
+  2. make db-migrate-run
 
   ### Alternative: Use Makefile for full Docker
     make docker-up
+    make db-migrate-run
 
 ## 4. Code Quality
   ### Development dependencies (Python)
@@ -65,3 +71,11 @@ Project code lives under `src/`.
   ### Run tests
     pytest
     # or: make test
+
+## 6. Migrations
+  * **db-migrate-create name={Name}** generates a new migration with the name {Name}
+  * **db-migrate-run** applies all pending migrations to update the database to the latest version (head).
+  * **db-reset** wipes all data and tables (drops schema) and re-applies all migrations from scratch.
+
+## 7. Fake Data generation
+   * **db-seed** populates the database with initial/dummy data.

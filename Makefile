@@ -2,6 +2,9 @@
 
 VENV_DIR=.venv
 APP_DIR=src
+DB_CONTAINER=postgres_local
+DB_USER=USER
+DB_NAME=SampleApi
 
 help:
 	@echo "Available targets:"
@@ -48,21 +51,29 @@ test:
 	.venv/bin/pytest
 
 docker-up:
-	docker-compose up --build
+	docker-compose up --build -d
 
 docker-down:
 	docker-compose down
+
+docker-down-volumes:
+	docker compose down -v
 
 db-up:
 	docker-compose up -d db
 
 ci: lint typecheck test
 
-db-migrate:
+db-migrate-create:
 	alembic revision --autogenerate -m $(name)
 
-db-upgrade:
+db-migrate-run:
 	alembic upgrade head
 
-db-generate:
-	python seed.py all
+db-seed:
+	PYTHONPATH=src python seed.py all
+
+db-clean-hot:
+	docker exec $(DB_CONTAINER) psql -U $(DB_USER) -d $(DB_NAME) -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+db-reset:db-clean-hot db-migrate-run
