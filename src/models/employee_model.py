@@ -1,3 +1,4 @@
+import re
 import uuid
 
 from datetime import UTC, date, datetime
@@ -5,6 +6,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from typing import Any, Optional
 
+from pydantic import field_validator, model_validator
 from sqlalchemy import DECIMAL, Column, String
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -19,6 +21,18 @@ class EmployeeBase(SQLModel):
     status: EmployeeStatus = Field(default=EmployeeStatus.ACTIVE)
     # current_position_id: uuid.UUID | None = Field(foreign_key='positions.id')
 
+    # Validators
+    @field_validator('employee_code')
+    @classmethod
+    def validate_employee_code_format(cls, v: str) -> str:
+        v = v.upper().strip()
+        pattern = r'^[A-Z]{3}-\d{3}$'
+        if not re.match(pattern, v):
+            raise ValueError(
+                'El código del empleado debe seguir el formato AAA-000 (3 letras, guión, 3 números)'
+            )
+        return v
+
 
 class EmployeePersonalInfoBase(SQLModel):
     first_name: str = Field(max_length=100)
@@ -27,7 +41,6 @@ class EmployeePersonalInfoBase(SQLModel):
     tax_id: str | None = Field(default=None, max_length=50)
     gender: str | None = Field(default=None, max_length=20)
     education_level: str | None = Field(default=None, max_length=50)
-    # updatable profile
     personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
     phone: str | None = Field(default=None, max_length=50)
     photo: str | None = Field(
@@ -38,6 +51,27 @@ class EmployeePersonalInfoBase(SQLModel):
     country_id: uuid.UUID | None = Field(default=None)
     address: str | None = Field(default=None, max_length=100)
 
+    # Validators
+    @field_validator('first_name', 'last_name', 'city')
+    @classmethod
+    def title_case(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return v.strip().title()
+
+    @field_validator('personal_email')
+    @classmethod
+    def lower_case_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+    @field_validator('document_number', 'tax_id')
+    @classmethod
+    def clean_document(cls, v: str | None) -> str | None:
+        if v:
+            # Elimina espacios, guiones y puntos
+            return v.replace('-', '').replace('.', '').replace(' ', '').upper()
+        return v
+
 
 class EmployeeFinancialInfoBase(SQLModel):
     salary_amount: Decimal = Field(default=0, sa_column=Column[Any](DECIMAL, nullable=False))
@@ -47,6 +81,22 @@ class EmployeeFinancialInfoBase(SQLModel):
 
     effective_from: date = Field(nullable=False)
     effective_to: date | None = Field(default=None, description='NULL = registro actual')
+
+    # Validators
+    @field_validator('salary_amount', 'company_cost_amount')
+    @classmethod
+    def must_be_positive(cls, v: Decimal) -> Decimal:
+        if v < 0:
+            raise ValueError('El monto no puede ser negativo')
+        return v
+
+    @model_validator(mode='after')
+    def check_dates(self) -> 'EmployeeFinancialInfoBase':
+        if self.effective_to is not None and self.effective_to < self.effective_from:
+            raise ValueError(
+                'La fecha de fin (effective_to) no puede ser anterior al inicio (effective_from)'
+            )
+        return self
 
 
 class EmployeeCreate(EmployeeBase, EmployeePersonalInfoBase):
