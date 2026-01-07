@@ -5,7 +5,8 @@ from controllers import (
     health_controller,
 )
 
+
 router = APIRouter()
 
-router.include_router(employee_controller.router, include_in_schema=False)
+router.include_router(employee_controller.router)
 router.include_router(health_controller.router)

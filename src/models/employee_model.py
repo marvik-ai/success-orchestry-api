@@ -1,10 +1,11 @@
+import re
 import uuid
-
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import Any, Optional
+from typing import Optional, Self
 
+from pydantic import field_validator, model_validator
 from sqlalchemy import DECIMAL, Column, String
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -17,17 +18,20 @@ class EmployeeStatus(str, PyEnum):
 class EmployeeBase(SQLModel):
     employee_code: str
     status: str
-    # current_position_id: uuid.UUID | None = Field(foreign_key='positions.id')
+
+    @field_validator('employee_code')
+    @classmethod
+    def validate_code(cls, v: str) -> str:
+        if not v.isalnum():
+            raise ValueError('El código debe ser alfanumérico')
+        return v.upper().strip()
 
 
 class EmployeeCreate(EmployeeBase):
-    # Nothing to add. Inherits name, country_id, etc.
-    # Without an 'id', the user cannot send the failing "id: 0".
     pass
 
 
 class Employee(EmployeeBase, table=True):
-    # The table class inherits base fields and adds DB-specific fields
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     notes: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -43,12 +47,21 @@ class Employee(EmployeeBase, table=True):
         back_populates='employee', sa_relationship_kwargs={'uselist': False}
     )
 
+    @model_validator(mode='after')
+    def validate_business_state(self) -> Self:
+        if self.deleted_at and self.status == EmployeeStatus.ACTIVE:
+            raise ValueError('Cierre el estado del empleado antes de eliminarlo')
+
+        if self.status == EmployeeStatus.INACTIVE and not self.notes:
+            raise ValueError("Debe registrar una razón en 'notes' para la desactivación")
+
+        return self
+
 
 class EmployeePersonalInfo(SQLModel, table=True):
     __tablename__ = 'employees_personal_info'
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    # Relación 1 a 1 con Employee
     employee_id: uuid.UUID = Field(foreign_key='employee.id', unique=True)
     first_name: str = Field(max_length=100)
     last_name: str = Field(max_length=100)
@@ -57,7 +70,6 @@ class EmployeePersonalInfo(SQLModel, table=True):
     gender: str | None = Field(default=None, max_length=20)
     education_level: str | None = Field(default=None, max_length=50)
 
-    # Perfil editable
     personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
     phone: str | None = Field(default=None, max_length=50)
     photo: str | None = Field(
@@ -68,8 +80,44 @@ class EmployeePersonalInfo(SQLModel, table=True):
     country_id: uuid.UUID | None = Field(default=None)
     address: str | None = Field(default=None, max_length=100)
 
-    # Relación inversa
     employee: Employee | None = Relationship(back_populates='personal_info')
+
+    @field_validator('first_name', 'last_name')
+    @classmethod
+    def validate_names(cls, v: str) -> str:
+        v = v.strip()
+        # Regex para letras latinas, tildes y espacios internos.
+        if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$', v):
+            raise ValueError('Solo se permiten letras y tildes (sin símbolos)')
+        return v
+
+    @field_validator('document_number', 'phone')
+    @classmethod
+    def validate_only_numbers(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = v.strip()
+        if not v.isdigit():
+            raise ValueError('Este campo debe contener solo números')
+        return v
+
+    @field_validator('nickname')
+    @classmethod
+    def validate_nickname(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        v = v.strip()
+        if not v.isalnum():
+            raise ValueError('El apodo solo puede contener letras y números')
+        return v
+
+    @field_validator('personal_email')
+    @classmethod
+    def validate_email_format(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', v):
+            raise ValueError('Formato de correo electrónico inválido')
+        return v
 
 
 class EmployeeFinancialInfo(SQLModel, table=True):
@@ -78,16 +126,30 @@ class EmployeeFinancialInfo(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     employee_id: uuid.UUID = Field(foreign_key='employee.id', nullable=False)
 
-    salary_amount: Decimal = Field(default=0, sa_column=Column[Any](DECIMAL, nullable=False))
+    salary_amount: Decimal = Field(default=0, sa_column=Column(DECIMAL, nullable=False))
     salary_currency_id: uuid.UUID = Field(nullable=False)
-
     company_cost_amount: Decimal = Field(default=0, sa_column=Column(DECIMAL, nullable=False))
 
     effective_from: date = Field(nullable=False)
-    effective_to: date | None = Field(default=None, description='NULL = registro actual')
+    effective_to: date | None = Field(default=None)
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Relación inversa
     employee: Employee | None = Relationship(back_populates='financial_info')
+
+    @model_validator(mode='after')
+    def validate_financial_logic(self) -> Self:
+        # Regla: El sueldo no puede ser negativo
+        if self.salary_amount < Decimal('0'):
+            raise ValueError('El salario no puede ser negativo')
+
+        # Regla: El costo de empresa no puede ser menor al salario bruto
+        if self.company_cost_amount < self.salary_amount:
+            raise ValueError('El costo de empresa no puede ser inferior al salario base')
+
+        # Regla: Consistencia de fechas
+        if self.effective_to and self.effective_to < self.effective_from:
+            raise ValueError('La fecha de fin no puede ser anterior a la de inicio')
+
+        return self

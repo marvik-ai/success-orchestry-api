@@ -1,7 +1,6 @@
-from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from models.employee_model import Employee, EmployeeCreate
 
@@ -22,22 +21,20 @@ class EmployeeRepositoryClass:
         if not db_employee:
             return None
 
-        # Update only fields present in the dictionary
         for key, value in update_data.items():
             setattr(db_employee, key, value)
+
         self.session.add(db_employee)
         self.session.commit()
         self.session.refresh(db_employee)
         return db_employee
 
-    def get_filtered_employees(
-        self,
-        name: str | None = None,
-    ) -> Sequence[Employee]:
+    def get_filtered_employees(self, name: str | None = None) -> list[Employee]:
         query = select(Employee)
 
         if name and name.strip():
-            # Usamos col() para que MyPy sepa que es una columna y no un str simple
-            # query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
-            pass
-        return self.session.exec(query).all()
+            query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
+
+        # Ejecutamos y convertimos explícitamente a lista de Employee
+        results = self.session.exec(query).all()
+        return cast(list[Employee], results)
