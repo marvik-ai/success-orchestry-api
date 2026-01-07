@@ -20,10 +20,43 @@ class EmployeeBase(SQLModel):
     # current_position_id: uuid.UUID | None = Field(foreign_key='positions.id')
 
 
-class EmployeeCreate(EmployeeBase):
+class EmployeePersonalInfoBase(SQLModel):
+    first_name: str = Field(max_length=100)
+    last_name: str = Field(max_length=100)
+    document_number: str | None = Field(default=None, max_length=20)
+    tax_id: str | None = Field(default=None, max_length=50)
+    gender: str | None = Field(default=None, max_length=20)
+    education_level: str | None = Field(default=None, max_length=50)
+    # updatable profile
+    personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
+    phone: str | None = Field(default=None, max_length=50)
+    photo: str | None = Field(
+        default=None, max_length=100, description='URL o key de storage (S3/GCS)'
+    )
+    nickname: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=50)
+    country_id: uuid.UUID | None = Field(default=None)
+    address: str | None = Field(default=None, max_length=100)
+
+
+class EmployeeFinancialInfoBase(SQLModel):
+    salary_amount: Decimal = Field(default=0, sa_column=Column[Any](DECIMAL, nullable=False))
+    salary_currency_id: uuid.UUID = Field(nullable=False)
+
+    company_cost_amount: Decimal = Field(default=0, sa_column=Column(DECIMAL, nullable=False))
+
+    effective_from: date = Field(nullable=False)
+    effective_to: date | None = Field(default=None, description='NULL = registro actual')
+
+
+class EmployeeCreate(EmployeeBase, EmployeePersonalInfoBase):
     # Nothing to add. Inherits name, country_id, etc.
     # Without an 'id', the user cannot send the failing "id: 0".
     pass
+
+
+class EmployeePublicResponse(EmployeeBase, EmployeePersonalInfoBase):
+    employee_id: uuid.UUID
 
 
 class Employee(EmployeeBase, table=True):
@@ -44,47 +77,25 @@ class Employee(EmployeeBase, table=True):
     )
 
 
-class EmployeePersonalInfo(SQLModel, table=True):
+class EmployeePersonalInfo(EmployeePersonalInfoBase, table=True):
     __tablename__ = 'employees_personal_info'
-
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-
     employee_id: uuid.UUID = Field(foreign_key='employee.id', unique=True)
-    first_name: str = Field(max_length=100)
-    last_name: str = Field(max_length=100)
-    document_number: str | None = Field(default=None, max_length=20)
-    tax_id: str | None = Field(default=None, max_length=50)
-    gender: str | None = Field(default=None, max_length=20)
-    education_level: str | None = Field(default=None, max_length=50)
-
-    # updatable profile
-    personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
-    phone: str | None = Field(default=None, max_length=50)
-    photo: str | None = Field(
-        default=None, max_length=100, description='URL o key de storage (S3/GCS)'
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)},
     )
-    nickname: str | None = Field(default=None, max_length=100)
-    city: str | None = Field(default=None, max_length=50)
-    country_id: uuid.UUID | None = Field(default=None)
-    address: str | None = Field(default=None, max_length=100)
-
+    deleted_at: datetime | None = Field(default=None)
     # inverse relationship
     employee: Employee | None = Relationship(back_populates='personal_info')
 
 
-class EmployeeFinancialInfo(SQLModel, table=True):
+class EmployeeFinancialInfo(EmployeeFinancialInfoBase, table=True):
     __tablename__ = 'employee_financial_info'
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     employee_id: uuid.UUID = Field(foreign_key='employee.id', nullable=False)
-
-    salary_amount: Decimal = Field(default=0, sa_column=Column[Any](DECIMAL, nullable=False))
-    salary_currency_id: uuid.UUID = Field(nullable=False)
-
-    company_cost_amount: Decimal = Field(default=0, sa_column=Column(DECIMAL, nullable=False))
-
-    effective_from: date = Field(nullable=False)
-    effective_to: date | None = Field(default=None, description='NULL = registro actual')
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
