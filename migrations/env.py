@@ -12,7 +12,6 @@ load_dotenv()
 
 target_metadata = SQLModel.metadata
 
-# 5. Configuración dinámica de la URL
 config = context.config
 user = os.getenv('DB_USER', 'postgres')
 password = os.getenv('DB_PASSWORD', 'password')

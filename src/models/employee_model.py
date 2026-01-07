@@ -48,7 +48,7 @@ class EmployeePersonalInfo(SQLModel, table=True):
     __tablename__ = 'employees_personal_info'
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    # Relación 1 a 1 con Employee
+
     employee_id: uuid.UUID = Field(foreign_key='employee.id', unique=True)
     first_name: str = Field(max_length=100)
     last_name: str = Field(max_length=100)
@@ -57,7 +57,7 @@ class EmployeePersonalInfo(SQLModel, table=True):
     gender: str | None = Field(default=None, max_length=20)
     education_level: str | None = Field(default=None, max_length=50)
 
-    # Perfil editable
+    # updatable profile
     personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
     phone: str | None = Field(default=None, max_length=50)
     photo: str | None = Field(
@@ -68,7 +68,7 @@ class EmployeePersonalInfo(SQLModel, table=True):
     country_id: uuid.UUID | None = Field(default=None)
     address: str | None = Field(default=None, max_length=100)
 
-    # Relación inversa
+    # inverse relationship
     employee: Employee | None = Relationship(back_populates='personal_info')
 
 
@@ -89,5 +89,5 @@ class EmployeeFinancialInfo(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Relación inversa
+    # inverse relationship
     employee: Employee | None = Relationship(back_populates='financial_info')
