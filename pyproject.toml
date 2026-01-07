@@ -31,7 +31,7 @@ skip-magic-trailing-comma = false
 combine-as-imports = true
 # AJUSTE: Forzamos 2 líneas después de los imports para evitar que el IDE lo cambie
 lines-after-imports = 2
-known-first-party = ["dependencies", "models", "src", "controllers"]
+known-first-party = ["dependencies", "models", "src", "controllers", "repositories", "schemas", "services"]
 
 [tool.mypy]
 # AJUSTE: Cambiado de 3.14 a 3.12 para que coincida con Ruff y tu entorno real
