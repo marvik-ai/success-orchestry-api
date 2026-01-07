@@ -16,7 +16,7 @@ class EmployeeStatus(str, PyEnum):
 
 class EmployeeBase(SQLModel):
     employee_code: str
-    status: str
+    status: EmployeeStatus = Field(default=EmployeeStatus.ACTIVE)
     # current_position_id: uuid.UUID | None = Field(foreign_key='positions.id')
 
 
@@ -55,8 +55,20 @@ class EmployeeCreate(EmployeeBase, EmployeePersonalInfoBase):
     pass
 
 
+class EmployeeUpdate(EmployeeBase, EmployeePersonalInfoBase):
+    employee_id: uuid.UUID
+
+
+class EmployeeFinancialCreate(EmployeeFinancialInfoBase):
+    pass
+
+
 class EmployeePublicResponse(EmployeeBase, EmployeePersonalInfoBase):
     employee_id: uuid.UUID
+
+
+class EmployeeFullResponse(EmployeePublicResponse, EmployeeFinancialInfoBase):
+    pass
 
 
 class Employee(EmployeeBase, table=True):
