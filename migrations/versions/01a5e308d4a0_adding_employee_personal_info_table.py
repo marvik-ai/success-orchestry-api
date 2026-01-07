@@ -1,11 +1,3 @@
-"""Adding_Employee_personal_info_Table.
-
-Revision ID: 01a5e308d4a0
-Revises: 76e54af3a89d
-Create Date: 2026-01-06 13:38:17.759045
-
-"""
-
 from collections.abc import Sequence
 
 import sqlalchemy as sa
