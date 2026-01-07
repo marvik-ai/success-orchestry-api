@@ -2,7 +2,6 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from common.config import settings
-from common.database import create_db_and_tables
 from common.logging_config import configure_logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +13,6 @@ from router.router import router as api_router
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup actions
     configure_logging()
-    create_db_and_tables()
     yield
     # Shutdown actions
 
