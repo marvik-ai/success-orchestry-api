@@ -1,11 +1,3 @@
-"""Adding_Employee_financial_info_Table.
-
-Revision ID: 1cb6c4d4cafc
-Revises: 01a5e308d4a0
-Create Date: 2026-01-06 14:51:02.917884
-
-"""
-
 from collections.abc import Sequence
 
 import sqlalchemy as sa

@@ -1,11 +1,3 @@
-"""Adding_Employee_Table.
-
-Revision ID: 76e54af3a89d
-Revises: 950ff5d5ed1e
-Create Date: 2026-01-06 13:04:43.704508
-
-"""
-
 from collections.abc import Sequence
 
 import sqlalchemy as sa
