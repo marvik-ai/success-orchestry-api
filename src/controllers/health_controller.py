@@ -21,7 +21,7 @@ class HealthResponse(BaseModel):
 def health_check(session: Session = Depends(get_db)) -> dict[str, str]:
     service = HealthService(session)
     try:
-        return service.check()
+        return service.check()  # type: ignore[no-any-return]
     except Exception as err:
         raise HTTPException(
             status_code=503,

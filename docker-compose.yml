@@ -19,7 +19,7 @@ services:
     container_name: fastapi_backend
     restart: always
     environment:
-      - DATABASE_URL=postgresql://USER:password1234@db:5432/SampleApi
+      - DB_HOST=db
     ports:
       - "8000:8000"
     depends_on:

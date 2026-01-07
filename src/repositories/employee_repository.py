@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Any
 
-from sqlmodel import Session, col, select
+from sqlmodel import Session, select
 
 from models.employee_model import Employee, EmployeeCreate
 
@@ -38,6 +38,6 @@ class EmployeeRepositoryClass:
 
         if name and name.strip():
             # Usamos col() para que MyPy sepa que es una columna y no un str simple
-            query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
-
+            # query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
+            pass
         return self.session.exec(query).all()

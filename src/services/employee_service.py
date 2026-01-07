@@ -20,7 +20,7 @@ class EmployeeService:
         return updated_employee
 
     def search_employees(self, name: str | None) -> Sequence[Employee]:
-        return self.emp_repo.get_filtered_employees(name)
+        return self.emp_repo.get_filtered_employees(name)  # type: ignore[no-any-return]
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
         created_employee = self.emp_repo.create_employee(employee)
