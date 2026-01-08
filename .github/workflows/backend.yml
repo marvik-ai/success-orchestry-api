@@ -18,8 +18,18 @@ jobs:
           python-version-file: '.python-version'
           cache: 'pip'
 
-      - name: Setup Environment (Make)
-        run: make setup
+      - name: Setup Environment
+        run:
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+          pip install build pytest ruff mypy
+
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
 
       - name: Run CI Suite (Make)
         run: make ci
