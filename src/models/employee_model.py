@@ -28,7 +28,7 @@ class EmployeeBase(SQLModel):
         pattern = r'^[A-Z]{3}-\d{3}$'
         if not re.match(pattern, v):
             raise ValueError(
-                'El código del empleado debe seguir el formato AAA-000 (3 letras, guión, 3 números)'
+                'The employee code must follow this pattern XXX-000 (Three letters - Three numbers)'
             )
         return v
 
@@ -43,7 +43,7 @@ class EmployeePersonalInfoBase(SQLModel):
     personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
     phone: str | None = Field(default=None, max_length=50)
     photo: str | None = Field(
-        default=None, max_length=100, description='URL o key de storage (S3/GCS)'
+        default=None, max_length=100, description='URL or storage key(S3/GCS)'
     )
     nickname: str | None = Field(default=None, max_length=100)
     city: str | None = Field(default=None, max_length=50)
@@ -51,23 +51,15 @@ class EmployeePersonalInfoBase(SQLModel):
     address: str | None = Field(default=None, max_length=100)
 
     # Validators
-    @field_validator('first_name', 'last_name', 'city')
+    @field_validator('personal_email', 'first_name', 'last_name', 'city')
     @classmethod
-    def title_case(cls, v: str | None) -> str | None:
-        if v is None:
-            return v
-        return v.strip().title()
-
-    @field_validator('personal_email')
-    @classmethod
-    def lower_case_email(cls, v: str) -> str:
+    def lower_case(cls, v: str) -> str:
         return v.strip().lower()
 
     @field_validator('document_number', 'tax_id')
     @classmethod
     def clean_document(cls, v: str | None) -> str | None:
         if v:
-            # Elimina espacios, guiones y puntos
             return v.replace('-', '').replace('.', '').replace(' ', '').upper()
         return v
 
@@ -79,21 +71,21 @@ class EmployeeFinancialInfoBase(SQLModel):
     company_cost_amount: Decimal = Field(default=0, sa_column=Column(DECIMAL, nullable=False))
 
     effective_from: date = Field(nullable=False)
-    effective_to: date | None = Field(default=None, description='NULL = registro actual')
+    effective_to: date | None = Field(default=None, description='NULL = current info')
 
     # Validators
     @field_validator('salary_amount', 'company_cost_amount')
     @classmethod
     def must_be_positive(cls, v: Decimal) -> Decimal:
         if v < 0:
-            raise ValueError('El monto no puede ser negativo')
+            raise ValueError('The amount cannot be negative')
         return v
 
     @model_validator(mode='after')
     def check_dates(self) -> 'EmployeeFinancialInfoBase':
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise ValueError(
-                'La fecha de fin (effective_to) no puede ser anterior al inicio (effective_from)'
+                'The end date (effective_to) cannot be earlier than the initial one (effective_from)'
             )
         return self
 
@@ -105,7 +97,7 @@ class EmployeeCreate(EmployeeBase, EmployeePersonalInfoBase):
 
 
 class EmployeeUpdate(EmployeeBase, EmployeePersonalInfoBase):
-    employee_id: uuid.UUID
+    pass
 
 
 class EmployeeFinancialCreate(EmployeeFinancialInfoBase):
@@ -113,7 +105,7 @@ class EmployeeFinancialCreate(EmployeeFinancialInfoBase):
 
 
 class EmployeePublicResponse(EmployeeBase, EmployeePersonalInfoBase):
-    employee_id: uuid.UUID
+    id: uuid.UUID
 
 
 class EmployeeFullResponse(EmployeePublicResponse, EmployeeFinancialInfoBase):
@@ -133,9 +125,16 @@ class Employee(EmployeeBase, table=True):
     personal_info: Optional['EmployeePersonalInfo'] = Relationship(
         back_populates='employee', sa_relationship_kwargs={'uselist': False}
     )
-    financial_info: Optional['EmployeeFinancialInfo'] = Relationship(
-        back_populates='employee', sa_relationship_kwargs={'uselist': False}
-    )
+    financial_info: list['EmployeeFinancialInfo'] = Relationship(back_populates='employee')
+
+    @property
+    def current_financial_info(self) -> Optional['EmployeeFinancialInfo']:
+        if not self.financial_info:
+            return None
+        for info in self.financial_info:
+            if info.effective_to is None:
+                return info
+        return None
 
 
 class EmployeePersonalInfo(EmployeePersonalInfoBase, table=True):
