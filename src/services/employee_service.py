@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import HTTPException
 
-from models.employee_model import Employee, EmployeeCreate
+from models.employee_model import Employee, EmployeeCreate, EmployeePaginationResponse
 from repositories.employee_repository import EmployeeRepositoryClass
 
 
@@ -18,10 +18,15 @@ class EmployeeService:
 
         return updated_employee
 
-    def search_employees(self, name: str | None) -> list[Employee]:
-        """Busca empleados filtrando por nombre."""
-        # Al asegurar que el repo devuelve list[Employee], MyPy estará satisfecho
-        return self.emp_repo.get_filtered_employees(name)
+    def search_employees(self, **kwargs: Any) -> EmployeePaginationResponse:
+        """Busca empleados y devuelve un objeto estructurado de paginación."""
+        # El repo sigue devolviendo la tupla (datos, total)
+        items, total = self.emp_repo.get_filtered_employees(**kwargs)
+
+        # Retornamos el modelo de Pydantic explícitamente
+        return EmployeePaginationResponse(
+            items=items, total=total, page=kwargs.get('page', 1), limit=kwargs.get('limit', 10)
+        )
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
         return self.emp_repo.create_employee(employee)

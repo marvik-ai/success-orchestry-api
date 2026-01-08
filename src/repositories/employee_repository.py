@@ -1,5 +1,7 @@
-from typing import Any, cast
+from typing import Any, Literal, cast
+from uuid import UUID
 
+from sqlalchemy import asc, desc, func, or_
 from sqlmodel import Session, col, select
 
 from models.employee_model import (
@@ -8,6 +10,7 @@ from models.employee_model import (
     EmployeeCreate,
     EmployeePersonalInfo,
     EmployeePersonalInfoBase,
+    EmployeeStatus,
 )
 
 
@@ -54,12 +57,61 @@ class EmployeeRepositoryClass:
         self.session.refresh(db_employee)
         return db_employee
 
-    def get_filtered_employees(self, name: str | None = None) -> list[Employee]:
-        query = select(Employee)
+    def get_filtered_employees(
+        self,
+        name: str | None = None,
+        status: EmployeeStatus | None = None,
+        role_id: UUID | None = None,
+        search: str | None = None,
+        page: int = 1,
+        limit: int = 10,
+        sort_by: str = 'created_at',
+        order: Literal['asc', 'desc'] = 'desc',
+    ) -> tuple[list[Employee], int]:
+        # 1. Base query with JOIN (needed to filter by personal info)
+        base_query = select(Employee).join(EmployeePersonalInfo)
+
+        # 2. Apply filters (exactly the same for count and data)
+        if status:
+            base_query = base_query.where(Employee.status == status)
 
         if name and name.strip():
-            query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
+            search_name = f'%{name.strip()}%'
+            base_query = base_query.where(
+                or_(
+                    col(EmployeePersonalInfo.first_name).ilike(search_name),
+                    col(EmployeePersonalInfo.last_name).ilike(search_name),
+                )
+            )
 
-        # Ejecutamos y convertimos explícitamente a lista de Employee
-        results = self.session.exec(query).all()
-        return cast(list[Employee], results)
+        if search and search.strip():
+            s = f'%{search.strip()}%'
+            base_query = base_query.where(
+                or_(
+                    col(Employee.employee_code).ilike(s),
+                    col(EmployeePersonalInfo.first_name).ilike(s),
+                    col(EmployeePersonalInfo.last_name).ilike(s),
+                    col(EmployeePersonalInfo.personal_email).ilike(s),
+                )
+            )
+
+        # 3. Get the TOTAL number of records matching the filters
+        count_statement = select(func.count()).select_from(base_query.subquery())
+        total = self.session.exec(count_statement).one()
+
+        # 4. Apply sorting
+        # Check if the column exists in Employee; fallback to created_at
+        sort_column = getattr(Employee, sort_by, Employee.created_at)
+        if order == 'desc':
+            base_query = base_query.order_by(desc(sort_column))
+        else:
+            base_query = base_query.order_by(asc(sort_column))
+
+        # 5. Apply pagination
+        offset_value = (page - 1) * limit
+        data_query = base_query.offset(offset_value).limit(limit)
+
+        # 6. Execute query
+        results = self.session.exec(data_query).all()
+
+        return cast(list[Employee], results), total

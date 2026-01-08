@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum as PyEnum
 from typing import Any, Optional
 
-from pydantic import field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from sqlalchemy import DECIMAL, Column, String
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -133,6 +133,13 @@ class EmployeePublicResponse(EmployeeBase, EmployeePersonalInfoBase):
 
 class EmployeeFullResponse(EmployeePublicResponse, EmployeeFinancialInfoBase):
     pass
+
+
+class EmployeePaginationResponse(BaseModel):
+    items: list[EmployeePublicResponse]
+    total: int
+    page: int
+    limit: int
 
 
 class Employee(EmployeeBase, table=True):
