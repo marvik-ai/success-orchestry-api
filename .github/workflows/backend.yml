@@ -46,11 +46,12 @@ jobs:
       - name: Run CI Suite (Make)
         run: make ci
         env:
-          DATABASE_URL: postgresql://USER:password@localhost:5432/SampleApi
-          POSTGRES_USER: USER
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: SampleApi
-          POSTGRES_HOST: localhost
+          DB_USER: USER
+          DB_PASSWORD: password
+          DB_NAME: SampleApi
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DATABASE_URL: postgresql+asyncpg://USER:password@localhost:5432/SampleApi
 
       - name: Build Artifact
         run: |
