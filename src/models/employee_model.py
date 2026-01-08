@@ -16,7 +16,17 @@ class EmployeeStatus(str, PyEnum):
 
 
 class EmployeeBase(SQLModel):
-    employee_code: str
+    employee_code: str = Field(
+        unique=True,
+        index=True,  # Enhances search speed
+        nullable=False,
+        min_length=7,  # Quick pydantic validation
+        max_length=7,  # Avoids huge bd strings
+        description='Unique employee code with the following format ABC-123',
+        schema_extra={  # Ejemplo para la documentación automática
+            'example': 'EMP-001'
+        },
+    )
     status: EmployeeStatus = Field(default=EmployeeStatus.ACTIVE)
     # current_position_id: uuid.UUID | None = Field(foreign_key='positions.id')
 
@@ -36,17 +46,30 @@ class EmployeeBase(SQLModel):
 class EmployeePersonalInfoBase(SQLModel):
     first_name: str = Field(max_length=100)
     last_name: str = Field(max_length=100)
-    document_number: str | None = Field(default=None, max_length=20)
-    tax_id: str | None = Field(default=None, max_length=50)
+    document_number: str = Field(
+        max_length=20,
+        unique=True,
+        index=True,
+        nullable=False,
+        schema_extra={'example': '12345678'},
+    )
+    tax_id: str | None = Field(
+        default=None,
+        max_length=50,
+        unique=True,
+        index=True,
+    )
     gender: str | None = Field(default=None, max_length=20)
     education_level: str | None = Field(default=None, max_length=50)
-    personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
-    phone: str | None = Field(default=None, max_length=50)
+    personal_email: str = Field(
+        sa_column=Column(String(255), unique=True, nullable=False, index=True)
+    )
+    phone: str | None = Field(default=None, max_length=50, unique=True, index=True)
     photo: str | None = Field(
         default=None, max_length=100, description='URL or storage key(S3/GCS)'
     )
     nickname: str | None = Field(default=None, max_length=100)
-    city: str | None = Field(default=None, max_length=50)
+    city: str | None = Field(default=None, max_length=50, index=True)
     country_id: uuid.UUID | None = Field(default=None)
     address: str | None = Field(default=None, max_length=100)
 
@@ -140,7 +163,12 @@ class Employee(EmployeeBase, table=True):
 class EmployeePersonalInfo(EmployeePersonalInfoBase, table=True):
     __tablename__ = 'employees_personal_info'
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    employee_id: uuid.UUID = Field(foreign_key='employee.id', unique=True)
+    employee_id: uuid.UUID = Field(
+        foreign_key='employee.id',
+        unique=True,
+        index=True,
+        nullable=False,
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
@@ -155,7 +183,7 @@ class EmployeeFinancialInfo(EmployeeFinancialInfoBase, table=True):
     __tablename__ = 'employee_financial_info'
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    employee_id: uuid.UUID = Field(foreign_key='employee.id', nullable=False)
+    employee_id: uuid.UUID = Field(foreign_key='employee.id', index=True, nullable=False)
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
