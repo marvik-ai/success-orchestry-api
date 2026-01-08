@@ -1,9 +1,9 @@
 from typing import Any
 
 from fastapi import HTTPException
-from repositories.employee_repository import EmployeeRepositoryClass
 
 from models.employee_model import Employee, EmployeeCreate
+from repositories.employee_repository import EmployeeRepositoryClass
 
 
 class EmployeeService:
