@@ -28,6 +28,9 @@ venv:
 
 install:
 	pip install -r requirements.txt
+	update-hooks
+
+update-hooks:
 	pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 
 install-dev:
