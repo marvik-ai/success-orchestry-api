@@ -79,3 +79,6 @@ Project code lives under `src/`.
 
 ## 7. Fake Data generation
    * **db-seed** populates the database with initial/dummy data.
+
+## 8. Update hooks
+  make update
