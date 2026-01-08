@@ -1,6 +1,8 @@
+from datetime import UTC, datetime
 from typing import Any, cast
+from uuid import UUID
 
-from sqlmodel import Session, col, select
+from sqlmodel import Session, select
 
 from models.employee_model import (
     Employee,
@@ -8,6 +10,7 @@ from models.employee_model import (
     EmployeeCreate,
     EmployeePersonalInfo,
     EmployeePersonalInfoBase,
+    EmployeeStatus,
 )
 
 
@@ -57,9 +60,23 @@ class EmployeeRepositoryClass:
     def get_filtered_employees(self, name: str | None = None) -> list[Employee]:
         query = select(Employee)
 
-        if name and name.strip():
-            query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
+        # if name and name.strip():
+        # query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
 
         # Ejecutamos y convertimos explícitamente a lista de Employee
         results = self.session.exec(query).all()
         return cast(list[Employee], results)
+
+    def get_by_id(self, employee_id: UUID) -> Employee | None:
+        # Importante: Filtramos por defecto los que no están borrados
+        statement = select(Employee).where(Employee.id == employee_id, Employee.deleted_at is None)
+        return self.session.exec(statement).first()
+
+    def soft_delete(self, employee: Employee) -> Employee:
+        employee.status = EmployeeStatus.TERMINATED
+        employee.deleted_at = datetime.now(UTC)
+
+        self.session.add(employee)
+        self.session.commit()
+        self.session.refresh(employee)
+        return employee
