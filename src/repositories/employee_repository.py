@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from models.employee_model import (
     Employee,
@@ -68,13 +68,17 @@ class EmployeeRepositoryClass:
         return cast(list[Employee], results)
 
     def get_by_id(self, employee_id: UUID) -> Employee | None:
-        # Importante: Filtramos por defecto los que no están borrados
-        statement = select(Employee).where(Employee.id == employee_id, Employee.deleted_at is None)
+        statement = select(Employee).where(
+            Employee.id == employee_id, col(Employee.deleted_at).is_(None)
+        )
         return self.session.exec(statement).first()
 
     def soft_delete(self, employee: Employee) -> Employee:
         employee.status = EmployeeStatus.TERMINATED
         employee.deleted_at = datetime.now(UTC)
+
+        if employee.personal_info:
+            self.session.delete(employee.personal_info)
 
         self.session.add(employee)
         self.session.commit()

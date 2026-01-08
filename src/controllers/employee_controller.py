@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Query, status
 
 from dependencies import EmployeeService, get_employees_services
 from models.employee_model import Employee, EmployeeCreate
@@ -43,3 +45,18 @@ def create_employee(
     emp_log = employee.name if hasattr(employee, 'name') else employee
     print(f'Creating employee: {emp_log}')
     return service.create_employee(employee)
+
+
+@router.delete('/{employee_id}', status_code=status.HTTP_204_NO_CONTENT)
+def delete_employee(
+    employee_id: UUID, service: EmployeeService = Depends(get_employees_services)
+) -> None:
+    """Soft delete an employee.
+
+    - TODO: Requires HR or ADMIN permissions.
+    - Checks for active projects.
+    - Updates status to TERMINATED and sets deleted_at.
+    - Deletes Personal info.
+    """
+    service.delete_employee(employee_id)
+    return None
