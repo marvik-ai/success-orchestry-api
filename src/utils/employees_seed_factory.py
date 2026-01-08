@@ -1,12 +1,11 @@
 import random
-
 from decimal import Decimal
 
-from common.database import engine
 from polyfactory import Use
 from polyfactory.factories.pydantic_factory import ModelFactory
 from sqlmodel import Session, SQLModel
 
+from common.database import engine
 from models.employee_model import (
     Employee,
     EmployeeFinancialInfo,
