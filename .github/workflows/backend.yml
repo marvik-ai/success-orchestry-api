@@ -1,0 +1,39 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [ 'main' ]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: 'pip'
+
+      - name: Setup Environment (Make)
+        run: make setup
+
+      - name: Run CI Suite (Make)
+        run: make ci
+
+      - name: Build Artifact
+        # we could add a 'dist' target to the Makefile to streamline this process
+        run: |
+          source .venv/bin/activate
+          pip install build
+          python -m build
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: dist/
+          retention-days: 5
