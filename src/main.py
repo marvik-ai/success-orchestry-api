@@ -1,15 +1,16 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from common.config import settings
-from common.logging_config import configure_logging
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from middleware import add_version_header, check_client_auth, log_requests
 from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+from common.config import settings
+from common.logging_config import configure_logging
+from middleware import add_version_header, check_client_auth, log_requests
 from router.router import router as api_router
-from sqlalchemy.exc import IntegrityError
 
 
 @asynccontextmanager
@@ -49,11 +50,36 @@ async def pydantic_validation_error_handler(request: Request, exc: ValidationErr
 
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
-    """Captura violaciones de integridad en la base de datos (Unique constraints)."""
-    # Aquí podrías loguear exc.orig para debug interno si fuera necesario
+    msg = str(exc.orig).lower()
+    if 'unique' in msg:
+        detail = 'Ya existe un registro con esos datos (campo duplicado).'
+        status_code = status.HTTP_409_CONFLICT
+    elif 'foreign key' in msg:
+        detail = 'Estás intentando referenciar un registro (como un ID) que no existe.'
+        status_code = status.HTTP_400_BAD_REQUEST
+    else:
+        detail = 'Violación de integridad en la base de datos.'
+        status_code = status.HTTP_400_BAD_REQUEST
+
+    return JSONResponse(status_code=status_code, content={'detail': detail})
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
+    """Handle general SQLAlchemy errors.
+
+    Captures errors such as syntax errors, lost connections,
+    or schema mismatches.
+    """
+    # En desarrollo es útil ver el error, en producción mejor ocultarlo.
+    detail = str(exc.orig) if hasattr(exc, 'orig') else str(exc)
+
     return JSONResponse(
-        status_code=status.HTTP_409_CONFLICT,
-        content={'detail': 'El recurso ya existe o viola una restricción de base de datos.'},
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            'detail': 'Error interno de base de datos.',
+            'technical_details': detail,  # <--- CUIDADO: Solo en desarrollo
+        },
     )
 
 

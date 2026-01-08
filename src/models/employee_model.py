@@ -11,8 +11,8 @@ from sqlmodel import Field, Relationship, SQLModel
 
 
 class EmployeeStatus(str, PyEnum):
-    ACTIVE = 'active'
-    INACTIVE = 'inactive'
+    ACTIVE = 'ACTIVE'
+    INACTIVE = 'INACTIVE'
 
 
 class EmployeeBase(SQLModel):
