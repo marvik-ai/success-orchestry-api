@@ -13,6 +13,7 @@ from sqlmodel import Field, Relationship, SQLModel
 class EmployeeStatus(str, PyEnum):
     ACTIVE = 'ACTIVE'
     INACTIVE = 'INACTIVE'
+    TERMINATED = 'TERMINATED'
 
 
 class EmployeeBase(SQLModel):
