@@ -34,28 +34,26 @@ jobs:
           cache: 'pip'
 
       - name: Setup Environment
-        run:
+        run: |
           python -m venv .venv
-
           source .venv/bin/activate
-
           pip install --upgrade pip
-
           pip install -r requirements.txt
-
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-
           pip install build pytest ruff mypy
-
           echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
 
       - name: Run CI Suite (Make)
         run: make ci
+        env:
+          DATABASE_URL: postgresql://USER:password@localhost:5432/SampleApi
+          POSTGRES_USER: USER
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: SampleApi
+          POSTGRES_HOST: localhost
 
       - name: Build Artifact
-        # we could add a 'dist' target to the Makefile to streamline this process
         run: |
-          source .venv/bin/activate
           pip install build
           python -m build
 
