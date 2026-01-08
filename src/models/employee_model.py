@@ -78,14 +78,14 @@ class EmployeeFinancialInfoBase(SQLModel):
     @classmethod
     def must_be_positive(cls, v: Decimal) -> Decimal:
         if v < 0:
-            raise ValueError('The amount can not be negative')
+            raise ValueError('The amount cannot be negative')
         return v
 
     @model_validator(mode='after')
     def check_dates(self) -> 'EmployeeFinancialInfoBase':
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise ValueError(
-                'The end date (effective_to) can not be before the initial one (effective_from)'
+                'The end date (effective_to) cannot be earlier than the initial one (effective_from)'
             )
         return self
 
