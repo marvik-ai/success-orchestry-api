@@ -6,11 +6,19 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
+from src.models.employee_model import Employee, EmployeePersonalInfo, EmployeeFinancialInfo
+
+# Ensure the app directory is in the path
 sys.path.append(os.getcwd())
 
 load_dotenv()
 
 target_metadata = SQLModel.metadata
+
+# Debugging block to verify registration
+print("--- DEBUG: Alembic is looking at these tables in code ---")
+print(list(target_metadata.tables.keys()))
+print("---------------------------------------------------------")
 
 config = context.config
 user = os.getenv('DB_USER', 'postgres')
@@ -22,19 +30,7 @@ dbname = os.getenv('DB_NAME', 'postgres')
 db_url = f'postgresql://{user}:{password}@{host}:{port}/{dbname}'
 config.set_main_option('sqlalchemy.url', db_url)
 
-
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
-    """
     url = config.get_main_option('sqlalchemy.url')
     context.configure(
         url=url,
@@ -46,14 +42,7 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
-
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix='sqlalchemy.',
@@ -65,7 +54,6 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()

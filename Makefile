@@ -65,7 +65,7 @@ db-up:
 ci: lint typecheck test
 
 db-migrate-create:
-	alembic revision --autogenerate -m $(name)
+	alembic revision --autogenerate -m "$(NAME)"
 
 db-migrate-run:
 	alembic upgrade head
