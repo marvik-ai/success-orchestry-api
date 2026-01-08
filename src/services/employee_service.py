@@ -1,6 +1,7 @@
 from typing import Any
+from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from models.employee_model import Employee, EmployeeCreate
 from repositories.employee_repository import EmployeeRepositoryClass
@@ -25,3 +26,21 @@ class EmployeeService:
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
         return self.emp_repo.create_employee(employee)
+
+    def _check_active_projects(self, employee_id: UUID) -> bool:
+        """TODO: This function should return true if the employee has any active project assignments."""
+        return False
+
+    def delete_employee(self, employee_id: UUID) -> None:
+        employee = self.emp_repo.get_by_id(employee_id)
+        if not employee:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Employee not found or already deleted',
+            )
+        if self._check_active_projects(employee_id):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail='Cannot delete employee with active project assignments.',
+            )
+        self.emp_repo.soft_delete(employee)
