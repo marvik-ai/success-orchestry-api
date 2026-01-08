@@ -1,8 +1,10 @@
 from collections.abc import Awaitable, Callable
 
-from common.config import settings
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+
+from common.config import settings
+
 
 PUBLIC_ENDPOINTS: set[str] = {'/', '/health', '/docs', '/openapi.json', '/redoc'}
 

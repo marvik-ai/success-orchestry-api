@@ -1,10 +1,10 @@
 import logging
 import time
-
 from collections.abc import Awaitable, Callable
 
 from starlette.requests import Request
 from starlette.responses import Response
+
 
 logger = logging.getLogger('app.request')
 

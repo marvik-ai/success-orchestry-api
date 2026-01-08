@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from services.health_service import HealthService
 from sqlmodel import Session
 
 from dependencies import get_db
+from services.health_service import HealthService
+
 
 router = APIRouter(tags=['Health'])
 
@@ -21,7 +22,7 @@ class HealthResponse(BaseModel):
 def health_check(session: Session = Depends(get_db)) -> dict[str, str]:
     service = HealthService(session)
     try:
-        return service.check()  # type: ignore[no-any-return]
+        return service.check()
     except Exception as err:
         raise HTTPException(
             status_code=503,

@@ -1,10 +1,11 @@
-from common.database import get_session
 from fastapi import Depends
+from sqlmodel import Session
+
+from common.database import get_session
 from repositories.employee_repository import EmployeeRepositoryClass
 
 # Usamos el alias redundante para exportar explícitamente a MyPy
 from services.employee_service import EmployeeService as EmployeeService
-from sqlmodel import Session
 
 
 # --- Dependencies ---
