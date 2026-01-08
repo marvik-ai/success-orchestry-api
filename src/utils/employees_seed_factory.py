@@ -14,12 +14,12 @@ from models.employee_model import (
 )
 
 
-class EmployeeFactory(ModelFactory[Employee]):  # type: ignore[misc]
+class EmployeeFactory(ModelFactory[Employee]):
     __model__ = Employee
     status = Use(lambda: random.choice(list(EmployeeStatus)))
 
 
-class EmployeePersonalInfoFactory(ModelFactory[EmployeePersonalInfo]):  # type: ignore[misc]
+class EmployeePersonalInfoFactory(ModelFactory[EmployeePersonalInfo]):
     __model__ = EmployeePersonalInfo
 
     personal_email = Use(ModelFactory.__faker__.email)
@@ -30,7 +30,7 @@ class EmployeePersonalInfoFactory(ModelFactory[EmployeePersonalInfo]):  # type: 
     __set_relationships__ = True
 
 
-class EmployeeFinancialInfoFactory(ModelFactory[EmployeeFinancialInfo]):  # type: ignore[misc]
+class EmployeeFinancialInfoFactory(ModelFactory[EmployeeFinancialInfo]):
     __model__ = EmployeeFinancialInfo
 
     salary_amount = Use(lambda: Decimal(random.randint(2000, 8000)))
