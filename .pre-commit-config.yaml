@@ -21,7 +21,7 @@ repos:
     hooks:
       - id: mypy
         # Add fastapi here so mypy understands the @router decorators
-        additional_dependencies: [pydantic, sqlmodel, fastapi]
+        additional_dependencies: [pydantic, sqlmodel, fastapi, polyfactory]
         stages: [pre-commit]
 
   # Commit Message Validation (Replaces .husky/commit-msg)
