@@ -1,11 +1,3 @@
-"""Change_optional_id.
-
-Revision ID: daa765486560
-Revises: 1cb6c4d4cafc
-Create Date: 2026-01-06 15:55:21.947802
-
-"""
-
 from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
