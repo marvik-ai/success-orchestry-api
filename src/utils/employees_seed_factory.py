@@ -1,7 +1,9 @@
 import random
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from polyfactory import Use
+from polyfactory.decorators import post_generated
 from polyfactory.factories.pydantic_factory import ModelFactory
 from sqlmodel import Session, SQLModel
 
@@ -17,6 +19,13 @@ from models.employee_model import (
 class EmployeeFactory(ModelFactory[Employee]):  # type: ignore[misc]
     __model__ = Employee
     status = Use(lambda: random.choice(list(EmployeeStatus)))
+
+    @post_generated  # type: ignore[misc]
+    @classmethod
+    def deleted_at(cls, status: EmployeeStatus) -> datetime | None:
+        if status == EmployeeStatus.TERMINATED:
+            return cls.__faker__.date_time_between(start_date='-2y', end_date='now', tzinfo=UTC)
+        return None
 
 
 class EmployeePersonalInfoFactory(ModelFactory[EmployeePersonalInfo]):  # type: ignore[misc]
@@ -38,6 +47,7 @@ class EmployeeFinancialInfoFactory(ModelFactory[EmployeeFinancialInfo]):  # type
 
 
 def seed_employees(n: int = 10) -> None:
+    SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
