@@ -9,7 +9,7 @@ repos:
 
   # Linter & Formatter (Replaces the npm run lint/prettier logic)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.6
+    rev: v0.14.10
     hooks:
       - id: ruff
         args: [ --fix ]

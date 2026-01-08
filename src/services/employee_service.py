@@ -1,10 +1,9 @@
-from collections.abc import Sequence
 from typing import Any
 
 from fastapi import HTTPException
-from repositories.employee_repository import EmployeeRepositoryClass
 
 from models.employee_model import Employee, EmployeeCreate
+from repositories.employee_repository import EmployeeRepositoryClass
 
 
 class EmployeeService:
@@ -19,9 +18,10 @@ class EmployeeService:
 
         return updated_employee
 
-    def search_employees(self, name: str | None) -> Sequence[Employee]:
-        return self.emp_repo.get_filtered_employees(name)  # type: ignore[no-any-return]
+    def search_employees(self, name: str | None) -> list[Employee]:
+        """Busca empleados filtrando por nombre."""
+        # Al asegurar que el repo devuelve list[Employee], MyPy estará satisfecho
+        return self.emp_repo.get_filtered_employees(name)
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
-        created_employee = self.emp_repo.create_employee(employee)
-        return created_employee
+        return self.emp_repo.create_employee(employee)

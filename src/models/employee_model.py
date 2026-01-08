@@ -1,6 +1,5 @@
 import re
 import uuid
-
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
@@ -12,8 +11,8 @@ from sqlmodel import Field, Relationship, SQLModel
 
 
 class EmployeeStatus(str, PyEnum):
-    ACTIVE = 'active'
-    INACTIVE = 'inactive'
+    ACTIVE = 'ACTIVE'
+    INACTIVE = 'INACTIVE'
 
 
 class EmployeeBase(SQLModel):
