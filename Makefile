@@ -82,6 +82,7 @@ db-migrate-create:
 db-migrate-run:
 	alembic upgrade head
 
+
 db-seed:
 	PYTHONPATH=src python seed.py all
 

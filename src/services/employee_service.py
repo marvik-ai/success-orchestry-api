@@ -7,6 +7,7 @@ from models.employee_model import (
     Employee,
     EmployeeCreate,
     EmployeePaginationResponse,
+    EmployeePublicResponse,
     EmployeeStatus,
 )
 from repositories.employee_repository import EmployeeRepositoryClass
@@ -52,11 +53,21 @@ class EmployeeService:
 
         return EmployeePaginationResponse(items=items, total=total, page=page, limit=limit)
 
-    def get_employee_by_id(self, employee_id: UUID) -> dict[str, Any]:
+    def get_employee_by_id(self, employee_id: UUID) -> EmployeePublicResponse | None:
         employee_dict = self.emp_repo.get_employee_by_id(employee_id)
         if not employee_dict:
-            raise ValueError("Employee doesn't exist")
+            return None
         return employee_dict
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
         return self.emp_repo.create_employee(employee)
+
+    def _check_active_projects(self, employee_id: UUID) -> bool:
+        """TODO: This function should return true if the employee has any active project assignments."""
+        return False
+
+    def delete_employee(self, employee_id: UUID) -> None:
+        employee = self.emp_repo.get_by_id(employee_id)
+        if not employee:
+            return
+        self.emp_repo.soft_delete(employee)

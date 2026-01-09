@@ -89,7 +89,7 @@ class EmployeePersonalInfoBase(SQLModel):
     def lower_case(cls, v: str) -> str:
         # Verify if its null
         if v is None:
-            return None
+            return ''
         return v.strip().lower()
 
     @field_validator('document_number', 'tax_id')

@@ -78,7 +78,6 @@ def seed_employees(n: int = 10) -> None:
     with Session(engine) as session:
         print(f'🌱 Generating {n} employees...')
         for _ in range(n):
-            # Agregamos la anotación de tipo explícita para Mypy (error línea 82)
             employee: Employee = EmployeeFactory.build()
             session.add(employee)
             session.flush()
