@@ -41,7 +41,9 @@ update-hooks:
 	pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 
 install-dev:
+	pip install -r requirements.txt
 	pip install -r requirements-dev.txt
+	$(MAKE) update-hooks
 
 run:
 	uvicorn main:app --reload --app-dir $(APP_DIR)

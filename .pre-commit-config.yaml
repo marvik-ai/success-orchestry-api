@@ -1,32 +1,60 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-
-  # Linter & Formatter (Replaces the npm run lint/prettier logic)
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
-    hooks:
-      - id: ruff
-        args: [ --fix ]
-      - id: ruff-format
-
-  # Type Checking
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.0
-    hooks:
-      - id: mypy
-        # Add fastapi here so mypy understands the @router decorators
-        additional_dependencies: [pydantic, sqlmodel, fastapi]
-        stages: [pre-commit]
-
-  # Commit Message Validation (Replaces .husky/commit-msg)
   - repo: local
     hooks:
+      # --- PRE-COMMIT-HOOKS (Equivalentes locales) ---
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+        entry: trailing-whitespace-fixer
+        language: python
+        types: [text]
+        stages: [pre-commit]
+
+      - id: end-of-file-fixer
+        name: Fix End of Files
+        entry: end-of-file-fixer
+        language: python
+        types: [text]
+        stages: [pre-commit]
+
+      - id: check-yaml
+        name: Check YAML
+        entry: check-yaml
+        language: python
+        types: [yaml]
+        stages: [pre-commit]
+
+      - id: check-added-large-files
+        name: Check for added large files
+        entry: check-added-large-files
+        language: python
+        args: ['--maxkb=500']
+        stages: [pre-commit]
+
+      # --- RUFF (Linter & Formatter) ---
+      - id: ruff
+        name: ruff
+        entry: ruff check --fix
+        language: system
+        types: [python]
+        stages: [pre-commit]
+
+      - id: ruff-format
+        name: ruff-format
+        entry: ruff format
+        language: system
+        types: [python]
+        stages: [pre-commit]
+
+      # --- MYPY (Type Checking) ---
+      - id: mypy
+        name: mypy
+        entry: mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-commit]
+
+      # --- COMMIT MESSAGE VALIDATION ---
       - id: check-commit-msg
         name: Check Commit Message Format
         entry: |
@@ -41,4 +69,3 @@ repos:
           "
         language: system
         stages: [commit-msg]
-        args: []

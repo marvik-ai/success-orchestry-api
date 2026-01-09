@@ -21,7 +21,6 @@ T = TypeVar('T')
 
 if TYPE_CHECKING:
     # Usamos la sintaxis tradicional para que Mypy no falle.
-    # El '# noqa: UP046' evita que Ruff nos pida cambiarlo a la sintaxis de Python 3.12.
     class ModelFactory(Generic[T]):  # noqa: UP046
         __model__: type[T]
         __faker__: Any
