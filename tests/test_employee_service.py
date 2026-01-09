@@ -26,9 +26,6 @@ def test_delete_employee_success(service: EmployeeService, mock_repo: Mock) -> N
     with patch.object(service, '_check_active_projects', return_value=False):
         service.delete_employee(emp_id)
 
-    # --- ACT ---
-    service.delete_employee(emp_id)
-
     # --- ASSERT ---
     mock_repo.soft_delete.assert_called_once_with(mock_employee)
 
