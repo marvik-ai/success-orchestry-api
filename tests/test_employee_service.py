@@ -2,7 +2,6 @@ from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException
 
 from models.employee_model import Employee, EmployeeStatus
 from services.employee_service import EmployeeService
@@ -28,17 +27,3 @@ def test_delete_employee_success(service: EmployeeService, mock_repo: Mock) -> N
 
     # --- ASSERT ---
     mock_repo.soft_delete.assert_called_once_with(mock_employee)
-
-
-def test_delete_employee_not_found(service: EmployeeService, mock_repo: Mock) -> None:
-    # --- ARRANGE ---
-    emp_id = uuid4()
-    mock_repo.get_by_id.return_value = None
-
-    # --- ACT & ASSERT ---
-    with pytest.raises(HTTPException) as exc:
-        service.delete_employee(emp_id)
-
-    assert exc.value.status_code == 404
-    assert 'Employee not found' in exc.value.detail
-    mock_repo.soft_delete.assert_not_called()

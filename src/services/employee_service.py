@@ -1,7 +1,7 @@
 from typing import Any, Literal
 from uuid import UUID
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 
 from models.employee_model import (
     Employee,
@@ -53,10 +53,10 @@ class EmployeeService:
 
         return EmployeePaginationResponse(items=items, total=total, page=page, limit=limit)
 
-    def get_employee_by_id(self, employee_id: UUID) -> EmployeePublicResponse:
+    def get_employee_by_id(self, employee_id: UUID) -> EmployeePublicResponse | None:
         employee_dict = self.emp_repo.get_employee_by_id(employee_id)
         if not employee_dict:
-            raise ValueError("Employee doesn't exist")
+            return None
         return employee_dict
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
@@ -69,13 +69,5 @@ class EmployeeService:
     def delete_employee(self, employee_id: UUID) -> None:
         employee = self.emp_repo.get_by_id(employee_id)
         if not employee:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='Employee not found or already deleted',
-            )
-        if self._check_active_projects(employee_id):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail='Cannot delete employee with active project assignments.',
-            )
+            return
         self.emp_repo.soft_delete(employee)

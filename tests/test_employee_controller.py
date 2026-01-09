@@ -30,6 +30,8 @@ def test_router_delete_employee_success(
 ) -> None:
     # --- ARRANGE ---
     emp_id = uuid4()
+    mock_service.get_employee_by_id.return_value = Mock()
+    mock_service._check_active_projects.return_value = False
     mock_service.delete_employee.return_value = None
 
     # --- ACT ---
@@ -50,18 +52,15 @@ def test_router_delete_employee_not_found(
     # --- ARRANGE ---
     emp_id = uuid4()
 
-    from fastapi import HTTPException
-
-    mock_service.delete_employee.side_effect = HTTPException(
-        status_code=404, detail='Employee not found'
-    )
+    mock_service.get_employee_by_id.return_value = None
 
     # --- ACT ---
     response = client_with_mocked_service.delete(f'Employees/{emp_id}')
 
     # --- ASSERT ---
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()['detail'] == 'Employee not found'
+    assert response.json()['detail'] == 'Employee not found or already deleted'
+    mock_service.delete_employee.assert_not_called()
 
 
 def test_router_delete_employee_invalid_uuid(

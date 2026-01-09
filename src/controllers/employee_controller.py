@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from dependencies import EmployeeService, get_employees_services
 from models.employee_model import (
@@ -35,7 +35,13 @@ def get_employee(
     employee_id: UUID,
     service: EmployeeService = Depends(get_employees_services),
 ) -> EmployeePublicResponse:
-    return service.get_employee_by_id(employee_id)
+    employee = service.get_employee_by_id(employee_id)
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Employee not found or already deleted',
+        )
+    return employee
 
 
 @router.get('/', response_model=EmployeePaginationResponse)
@@ -90,5 +96,14 @@ def delete_employee(
     - Updates status to TERMINATED and sets deleted_at.
     - Deletes Personal info.
     """
+    if not service.get_employee_by_id(employee_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Employee not found or already deleted',
+        )
+    if service._check_active_projects(employee_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Cannot delete employee with active project assignments.',
+        )
     service.delete_employee(employee_id)
-    return None
