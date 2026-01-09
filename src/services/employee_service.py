@@ -7,6 +7,7 @@ from models.employee_model import (
     Employee,
     EmployeeCreate,
     EmployeePaginationResponse,
+    EmployeePublicResponse,
     EmployeeStatus,
 )
 from repositories.employee_repository import EmployeeRepositoryClass
@@ -52,7 +53,7 @@ class EmployeeService:
 
         return EmployeePaginationResponse(items=items, total=total, page=page, limit=limit)
 
-    def get_employee_by_id(self, employee_id: UUID) -> dict[str, Any]:
+    def get_employee_by_id(self, employee_id: UUID) -> EmployeePublicResponse:
         employee_dict = self.emp_repo.get_employee_by_id(employee_id)
         if not employee_dict:
             raise ValueError("Employee doesn't exist")

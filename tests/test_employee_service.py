@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 import pytest
@@ -23,7 +23,8 @@ def test_delete_employee_success(service: EmployeeService, mock_repo: Mock) -> N
     emp_id = uuid4()
     mock_employee = Employee(id=emp_id, status=EmployeeStatus.ACTIVE)
     mock_repo.get_by_id.return_value = mock_employee
-    service._check_active_projects = Mock(return_value=False)
+    with patch.object(service, '_check_active_projects', return_value=False):
+        service.delete_employee(emp_id)
 
     # --- ACT ---
     service.delete_employee(emp_id)

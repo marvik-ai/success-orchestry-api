@@ -11,6 +11,7 @@ from models.employee_model import (
     EmployeeCreate,
     EmployeePersonalInfo,
     EmployeePersonalInfoBase,
+    EmployeePublicResponse,
     EmployeeStatus,
 )
 
@@ -58,8 +59,7 @@ class EmployeeRepositoryClass:
         self.session.refresh(db_employee)
         return db_employee
 
-    def get_employee_by_id(self, employee_id: UUID) -> dict[str, Any] | None:
-        # Realizamos el JOIN para obtener ambas partes de la información en una sola consulta
+    def get_employee_by_id(self, employee_id: UUID) -> EmployeePublicResponse | None:
         statement = (
             select(Employee, EmployeePersonalInfo)
             .join(EmployeePersonalInfo)
@@ -72,9 +72,10 @@ class EmployeeRepositoryClass:
             return None
 
         emp, info = result
-        # Aplanamos: Los campos de 'info' (first_name, etc) y 'emp' (employee_code, id)
-        # se mezclan en un único diccionario.
-        return {**info.model_dump(), **emp.model_dump()}
+
+        combined_data = {**info.model_dump(), **emp.model_dump()}
+
+        return EmployeePublicResponse.model_validate(combined_data)
 
     def get_filtered_employees(
         self,
@@ -86,7 +87,7 @@ class EmployeeRepositoryClass:
         limit: int = 10,
         sort_by: str = 'created_at',
         order: Literal['asc', 'desc'] = 'desc',
-    ) -> tuple[list[dict[str, Any]], int]:
+    ) -> tuple[list[EmployeePublicResponse], int]:
         # 1. Base query fetching both tables to flatten later
         base_query = select(Employee, EmployeePersonalInfo).join(EmployeePersonalInfo)
 
@@ -119,24 +120,36 @@ class EmployeeRepositoryClass:
         total = self.session.exec(count_stmt).one()
 
         # 4. Apply sorting
-        sort_col = getattr(Employee, sort_by, Employee.created_at)
+        sort_map = {
+            'created_at': Employee.created_at,
+            'updated_at': Employee.updated_at,
+            'employee_code': Employee.employee_code,
+            'status': Employee.status,
+            'first_name': EmployeePersonalInfo.first_name,
+            'last_name': EmployeePersonalInfo.last_name,
+            'personal_email': EmployeePersonalInfo.personal_email,
+        }
+        sort_col = sort_map.get(sort_by, Employee.created_at)
+
         if order == 'desc':
-            base_query = base_query.order_by(desc(sort_col))
+            base_query = base_query.order_by(desc(col(sort_col)))
         else:
-            base_query = base_query.order_by(asc(sort_col))
+            base_query = base_query.order_by(asc(col(sort_col)))
 
         # 5. Execute with pagination
         offset_value = (page - 1) * limit
         results = self.session.exec(base_query.offset(offset_value).limit(limit)).all()
 
-        # 6. Flatten the results: Combine Employee and PersonalInfo into one dict
-        flattened_items = []
+        response_items = []
         for emp, info in results:
-            # Merging dictionaries: info fields + emp fields (emp.id overrides info.id)
+            # Merging dictionaries: 'emp' va al final para que emp.id tenga prioridad sobre info.id
             merged_data = {**info.model_dump(), **emp.model_dump()}
-            flattened_items.append(merged_data)
 
-        return flattened_items, total
+            # 2. Convertimos el dict a la clase Pydantic EmployeePublicResponse
+            response_obj = EmployeePublicResponse.model_validate(merged_data)
+            response_items.append(response_obj)
+
+        return response_items, total
 
     def get_by_id(self, employee_id: UUID) -> Employee | None:
         statement = select(Employee).where(
