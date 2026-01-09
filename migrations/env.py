@@ -6,6 +6,12 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
+from models.employee_model import (  # noqa: F401
+    Employee,
+    EmployeeFinancialInfo,
+    EmployeePersonalInfo,
+)
+
 
 # Ensure the app directory is in the path
 sys.path.append(os.getcwd())
