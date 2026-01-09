@@ -3,9 +3,9 @@ import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
-from pydantic import field_validator, model_validator
+from pydantic import BaseModel, StringConstraints, field_validator, model_validator
 from sqlalchemy import DECIMAL, Column, String
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -16,8 +16,17 @@ class EmployeeStatus(str, PyEnum):
     TERMINATED = 'TERMINATED'
 
 
+EMPLOYEE_CODE_PATTERN = r'^[A-Z]{3}-\d{3}$'
+
+# Corrected parameter: to_upper instead of upper_case
+EmployeeCode = Annotated[
+    str,
+    StringConstraints(pattern=EMPLOYEE_CODE_PATTERN, strip_whitespace=True, to_upper=True),
+]
+
+
 class EmployeeBase(SQLModel):
-    employee_code: str = Field(
+    employee_code: EmployeeCode = Field(
         unique=True,
         index=True,  # Enhances search speed
         nullable=False,
@@ -78,6 +87,9 @@ class EmployeePersonalInfoBase(SQLModel):
     @field_validator('personal_email', 'first_name', 'last_name', 'city')
     @classmethod
     def lower_case(cls, v: str) -> str:
+        # Verify if its null
+        if v is None:
+            return ''
         return v.strip().lower()
 
     @field_validator('document_number', 'tax_id')
@@ -134,6 +146,13 @@ class EmployeePublicResponse(EmployeeBase, EmployeePersonalInfoBase):
 
 class EmployeeFullResponse(EmployeePublicResponse, EmployeeFinancialInfoBase):
     pass
+
+
+class EmployeePaginationResponse(BaseModel):
+    items: list[EmployeePublicResponse]
+    total: int
+    page: int
+    limit: int
 
 
 class Employee(EmployeeBase, table=True):

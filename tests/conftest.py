@@ -24,7 +24,7 @@ engine = create_engine(
 )
 
 
-@pytest.fixture(name='session')  # type: ignore[misc]
+@pytest.fixture(name='session')
 def session_fixture() -> Generator[Session, None, None]:
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
@@ -32,7 +32,7 @@ def session_fixture() -> Generator[Session, None, None]:
     SQLModel.metadata.drop_all(engine)
 
 
-@pytest.fixture(name='client')  # type: ignore[misc]
+@pytest.fixture(name='client')
 def client_fixture(session: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides[get_session] = lambda: session
     client = TestClient(app)

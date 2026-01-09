@@ -1,7 +1,8 @@
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any, Literal
 from uuid import UUID
 
+from sqlalchemy import asc, desc, func, or_
 from sqlmodel import Session, col, select
 
 from models.employee_model import (
@@ -57,15 +58,85 @@ class EmployeeRepositoryClass:
         self.session.refresh(db_employee)
         return db_employee
 
-    def get_filtered_employees(self, name: str | None = None) -> list[Employee]:
-        query = select(Employee)
+    def get_employee_by_id(self, employee_id: UUID) -> dict[str, Any] | None:
+        # Realizamos el JOIN para obtener ambas partes de la información en una sola consulta
+        statement = (
+            select(Employee, EmployeePersonalInfo)
+            .join(EmployeePersonalInfo)
+            .where(Employee.id == employee_id)
+        )
 
-        # if name and name.strip():
-        # query = query.where(col(Employee.name).ilike(f'%{name.strip()}%'))
+        result = self.session.exec(statement).first()
 
-        # Ejecutamos y convertimos explícitamente a lista de Employee
-        results = self.session.exec(query).all()
-        return cast(list[Employee], results)
+        if not result:
+            return None
+
+        emp, info = result
+        # Aplanamos: Los campos de 'info' (first_name, etc) y 'emp' (employee_code, id)
+        # se mezclan en un único diccionario.
+        return {**info.model_dump(), **emp.model_dump()}
+
+    def get_filtered_employees(
+        self,
+        name: str | None = None,
+        status: EmployeeStatus | None = None,
+        role_id: UUID | None = None,
+        search: str | None = None,
+        page: int = 1,
+        limit: int = 10,
+        sort_by: str = 'created_at',
+        order: Literal['asc', 'desc'] = 'desc',
+    ) -> tuple[list[dict[str, Any]], int]:
+        # 1. Base query fetching both tables to flatten later
+        base_query = select(Employee, EmployeePersonalInfo).join(EmployeePersonalInfo)
+
+        # 2. Apply filters
+        if status:
+            base_query = base_query.where(Employee.status == status)
+
+        if name and name.strip():
+            clean_name = f'%{name.strip()}%'
+            base_query = base_query.where(
+                or_(
+                    col(EmployeePersonalInfo.first_name).ilike(clean_name),
+                    col(EmployeePersonalInfo.last_name).ilike(clean_name),
+                )
+            )
+
+        if search and search.strip():
+            s = f'%{search.strip()}%'
+            base_query = base_query.where(
+                or_(
+                    col(Employee.employee_code).ilike(s),
+                    col(EmployeePersonalInfo.first_name).ilike(s),
+                    col(EmployeePersonalInfo.last_name).ilike(s),
+                    col(EmployeePersonalInfo.personal_email).ilike(s),
+                )
+            )
+
+        # 3. Get total count using a subquery
+        count_stmt = select(func.count()).select_from(base_query.subquery())
+        total = self.session.exec(count_stmt).one()
+
+        # 4. Apply sorting
+        sort_col = getattr(Employee, sort_by, Employee.created_at)
+        if order == 'desc':
+            base_query = base_query.order_by(desc(sort_col))
+        else:
+            base_query = base_query.order_by(asc(sort_col))
+
+        # 5. Execute with pagination
+        offset_value = (page - 1) * limit
+        results = self.session.exec(base_query.offset(offset_value).limit(limit)).all()
+
+        # 6. Flatten the results: Combine Employee and PersonalInfo into one dict
+        flattened_items = []
+        for emp, info in results:
+            # Merging dictionaries: info fields + emp fields (emp.id overrides info.id)
+            merged_data = {**info.model_dump(), **emp.model_dump()}
+            flattened_items.append(merged_data)
+
+        return flattened_items, total
 
     def get_by_id(self, employee_id: UUID) -> Employee | None:
         statement = select(Employee).where(

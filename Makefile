@@ -1,4 +1,4 @@
-.PHONY: help setup venv install install-dev run lint format typecheck test docker-up docker-down db-up ci
+.PHONY: help setup venv install install-dev run lint format typecheck test docker-up docker-down docker-down-volumes db-up ci db-migrate-create db-migrate-run db-seed db-clean-hot db-reset
 
 VENV_DIR=.venv
 APP_DIR=src
@@ -8,18 +8,25 @@ DB_NAME=SampleApi
 
 help:
 	@echo "Available targets:"
-	@echo "  setup        Create venv and install dependencies"
-	@echo "  venv         Create virtual environment"
-	@echo "  install      Install runtime dependencies"
-	@echo "  install-dev  Install dev dependencies"
-	@echo "  run          Run the API with uvicorn"
-	@echo "  lint         Run ruff check (readonly)"
-	@echo "  format       Run ruff fix (lint + imports) and format"
-	@echo "  typecheck    Run mypy"
-	@echo "  test         Run pytest with coverage"
-	@echo "  docker-up    Start full stack with docker-compose"
-	@echo "  docker-down  Stop docker-compose stack"
-	@echo "  db-up        Start only the database container"
+	@echo "  setup                Create venv and install dependencies"
+	@echo "  venv                 Create virtual environment"
+	@echo "  install              Install runtime dependencies"
+	@echo "  install-dev          Install dev dependencies"
+	@echo "  run                  Run the API with uvicorn"
+	@echo "  lint                 Run ruff check (readonly)"
+	@echo "  format               Run ruff fix (lint + imports) and format"
+	@echo "  typecheck            Run mypy"
+	@echo "  test                 Run pytest with coverage"
+	@echo "  docker-up            Start full stack with docker-compose"
+	@echo "  docker-down          Stop docker-compose stack"
+	@echo "  docker-down-volumes  Stop stack and remove volumes"
+	@echo "  db-up                Start only the database container"
+	@echo "  ci                   Run lint, typecheck, and test"
+	@echo "  db-migrate-create    Create a new migration (use NAME='...')"
+	@echo "  db-migrate-run       Run all pending migrations"
+	@echo "  db-seed              Seed the database with initial data"
+	@echo "  db-clean-hot         Drop and recreate public schema"
+	@echo "  db-reset             Wipe database and re-run migrations"
 
 setup: venv install install-dev
 
@@ -28,10 +35,15 @@ venv:
 
 install:
 	pip install -r requirements.txt
+	$(MAKE) update-hooks
+
+update-hooks:
 	pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 
 install-dev:
+	pip install -r requirements.txt
 	pip install -r requirements-dev.txt
+	$(MAKE) update-hooks
 
 run:
 	uvicorn main:app --reload --app-dir $(APP_DIR)

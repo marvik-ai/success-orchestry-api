@@ -11,12 +11,12 @@ from main import app
 from services.employee_service import EmployeeService
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def mock_service() -> Mock:
     return Mock(spec=EmployeeService)
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def client_with_mocked_service(
     client: TestClient, mock_service: Mock
 ) -> Generator[TestClient, None, None]:

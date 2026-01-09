@@ -8,12 +8,12 @@ from models.employee_model import Employee, EmployeeStatus
 from services.employee_service import EmployeeService
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def mock_repo() -> Mock:
     return Mock()
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def service(mock_repo: Mock) -> EmployeeService:
     return EmployeeService(emp_repo=mock_repo)
 
