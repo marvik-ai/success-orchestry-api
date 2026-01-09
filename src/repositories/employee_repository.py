@@ -21,22 +21,16 @@ class EmployeeRepositoryClass:
         self.session = session
 
     def create_employee(self, employee_in: EmployeeCreate) -> Employee:
-        # 1. Extraer campos de Información Personal
-        # Usamos el esquema base para saber qué llaves extraer
         personal_fields = EmployeePersonalInfoBase.model_fields.keys()
         personal_data = employee_in.model_dump(include=set(personal_fields))
         db_personal_info = EmployeePersonalInfo(**personal_data)
 
-        # 2. Extraer campos de la tabla Employee
-        # Extraemos solo lo que pertenece a EmployeeBase
         employee_fields = EmployeeBase.model_fields.keys()
         main_data = employee_in.model_dump(include=set(employee_fields))
 
-        # 3. Instanciar el objeto principal y vincular la relación
         db_employee = Employee(**main_data)
         db_employee.personal_info = db_personal_info
 
-        # 4. Persistir en la DB
         try:
             self.session.add(db_employee)
             self.session.commit()
@@ -142,10 +136,8 @@ class EmployeeRepositoryClass:
 
         response_items = []
         for emp, info in results:
-            # Merging dictionaries: 'emp' va al final para que emp.id tenga prioridad sobre info.id
+            # Merging dictionaries
             merged_data = {**info.model_dump(), **emp.model_dump()}
-
-            # 2. Convertimos el dict a la clase Pydantic EmployeePublicResponse
             response_obj = EmployeePublicResponse.model_validate(merged_data)
             response_items.append(response_obj)
 
