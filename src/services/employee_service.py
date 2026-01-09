@@ -1,8 +1,14 @@
-from typing import Any
+from typing import Any, Literal
+from uuid import UUID
 
 from fastapi import HTTPException
 
-from models.employee_model import Employee, EmployeeCreate
+from models.employee_model import (
+    Employee,
+    EmployeeCreate,
+    EmployeePaginationResponse,
+    EmployeeStatus,
+)
 from repositories.employee_repository import EmployeeRepositoryClass
 
 
@@ -18,10 +24,39 @@ class EmployeeService:
 
         return updated_employee
 
-    def search_employees(self, name: str | None) -> list[Employee]:
-        """Busca empleados filtrando por nombre."""
-        # Al asegurar que el repo devuelve list[Employee], MyPy estará satisfecho
-        return self.emp_repo.get_filtered_employees(name)
+    # Search and get
+    def search_employees(
+        self,
+        name: str | None = None,
+        status: EmployeeStatus | None = None,
+        role_id: UUID | None = None,
+        search: str | None = None,
+        page: int = 1,
+        limit: int = 10,
+        sort_by: str = 'created_at',
+        order: Literal['asc', 'desc'] = 'desc',
+    ) -> EmployeePaginationResponse:
+        """Fetch employees and return a structured pagination response."""
+        # Repository now returns flat dictionaries
+        safe_page = page if page > 0 else 1
+        items, total = self.emp_repo.get_filtered_employees(
+            name=name,
+            status=status,
+            role_id=role_id,
+            search=search,
+            page=safe_page,
+            limit=limit,
+            sort_by=sort_by,
+            order=order,
+        )
+
+        return EmployeePaginationResponse(items=items, total=total, page=page, limit=limit)
+
+    def get_employee_by_id(self, employee_id: UUID) -> dict[str, Any]:
+        employee_dict = self.emp_repo.get_employee_by_id(employee_id)
+        if not employee_dict:
+            raise ValueError("Employee doesn't exist")
+        return employee_dict
 
     def create_employee(self, employee: EmployeeCreate) -> Employee:
         return self.emp_repo.create_employee(employee)
