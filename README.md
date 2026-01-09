@@ -81,4 +81,4 @@ Project code lives under `src/`.
    * **db-seed** populates the database with initial/dummy data.
 
 ## 8. Update hooks
-  make update
+  make update-hooks

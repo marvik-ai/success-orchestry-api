@@ -35,7 +35,7 @@ venv:
 
 install:
 	pip install -r requirements.txt
-	update-hooks
+	$(MAKE) update-hooks
 
 update-hooks:
 	pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push

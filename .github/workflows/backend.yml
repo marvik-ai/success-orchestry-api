@@ -1,0 +1,66 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [ 'main' ]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: USER
+          POSTGRES_DB: SampleApi
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: 'pip'
+
+      - name: Setup Environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install build pytest ruff mypy
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> $GITHUB_PATH
+
+      - name: Run CI Suite (Make)
+        run: make ci
+        env:
+          DB_USER: USER
+          DB_PASSWORD: password
+          DB_NAME: SampleApi
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DATABASE_URL: postgresql+asyncpg://USER:password@localhost:5432/SampleApi
+
+      - name: Build Artifact
+        run: |
+          pip install build
+          python -m build
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: dist/
+          retention-days: 5
