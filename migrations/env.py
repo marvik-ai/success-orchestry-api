@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
-from models.employee_model import (  # noqa: F401
+from src.models.employee_model import (  # noqa: F401
     Employee,
     EmployeeFinancialInfo,
     EmployeePersonalInfo,
