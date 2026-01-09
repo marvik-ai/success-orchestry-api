@@ -1,8 +1,8 @@
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-
 from alembic import op
+
 
 # revision identifiers, used by Alembic.
 revision: str = '1cb6c4d4cafc'

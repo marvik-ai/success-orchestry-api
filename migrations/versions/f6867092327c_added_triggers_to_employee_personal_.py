@@ -1,11 +1,13 @@
-from typing import Sequence, Union
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
-import sqlmodel
+from alembic import op
+
 
 # revision identifiers
 revision: str = 'f6867092327c'
-down_revision: Union[str, Sequence[str], None] = 'daa765486560'
+down_revision: str | Sequence[str] | None = 'daa765486560'
+
 
 def upgrade() -> None:
     # 1. CREATE THE ENUM TYPE MANUALLY
@@ -15,11 +17,19 @@ def upgrade() -> None:
 
     # 2. NOW ALTER THE COLUMN
     # We add 'using' clause to help Postgres convert string to enum
-    op.execute("ALTER TABLE employee ALTER COLUMN status TYPE employeestatus USING status::employeestatus")
+    op.execute(
+        'ALTER TABLE employee ALTER COLUMN status TYPE employeestatus USING status::employeestatus'
+    )
 
     # 3. ADD YOUR COLUMNS (Updated with server_default for safety)
-    op.add_column('employees_personal_info', sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')))
-    op.add_column('employees_personal_info', sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')))
+    op.add_column(
+        'employees_personal_info',
+        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+    )
+    op.add_column(
+        'employees_personal_info',
+        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('now()')),
+    )
     op.add_column('employees_personal_info', sa.Column('deleted_at', sa.DateTime(), nullable=True))
 
     # 4. TRIGGER LOGIC
@@ -41,17 +51,21 @@ def upgrade() -> None:
             EXECUTE PROCEDURE update_updated_at_column();
         """)
 
+
 def downgrade() -> None:
     # Remove triggers and function
     for table_name in ['employee', 'employees_personal_info', 'employee_financial_info']:
-        op.execute(f"DROP TRIGGER IF EXISTS set_updated_at_{table_name} ON {table_name}")
-    op.execute("DROP FUNCTION IF EXISTS update_updated_at_column")
+        op.execute(f'DROP TRIGGER IF EXISTS set_updated_at_{table_name} ON {table_name}')
+    op.execute('DROP FUNCTION IF EXISTS update_updated_at_column')
 
     # Revert column to VARCHAR
-    op.alter_column('employee', 'status',
-               existing_type=sa.Enum('ACTIVE', 'INACTIVE', name='employeestatus'),
-               type_=sa.VARCHAR(),
-               existing_nullable=False)
+    op.alter_column(
+        'employee',
+        'status',
+        existing_type=sa.Enum('ACTIVE', 'INACTIVE', name='employeestatus'),
+        type_=sa.VARCHAR(),
+        existing_nullable=False,
+    )
 
     # DROP THE TYPE
     sa.Enum(name='employeestatus').drop(op.get_bind(), checkfirst=True)

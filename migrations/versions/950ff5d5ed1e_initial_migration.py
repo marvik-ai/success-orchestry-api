@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 
+
 # revision identifiers, used by Alembic.
 revision: str = '950ff5d5ed1e'
 down_revision: str | Sequence[str] | None = None

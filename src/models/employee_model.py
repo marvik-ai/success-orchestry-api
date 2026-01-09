@@ -3,9 +3,9 @@ import uuid
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
-from pydantic import field_validator, model_validator
+from pydantic import BaseModel, StringConstraints, field_validator, model_validator
 from sqlalchemy import DECIMAL, Column, String
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -13,10 +13,30 @@ from sqlmodel import Field, Relationship, SQLModel
 class EmployeeStatus(str, PyEnum):
     ACTIVE = 'ACTIVE'
     INACTIVE = 'INACTIVE'
+    TERMINATED = 'TERMINATED'
+
+
+EMPLOYEE_CODE_PATTERN = r'^[A-Z]{3}-\d{3}$'
+
+# Corrected parameter: to_upper instead of upper_case
+EmployeeCode = Annotated[
+    str,
+    StringConstraints(pattern=EMPLOYEE_CODE_PATTERN, strip_whitespace=True, to_upper=True),
+]
 
 
 class EmployeeBase(SQLModel):
-    employee_code: str
+    employee_code: EmployeeCode = Field(
+        unique=True,
+        index=True,  # Enhances search speed
+        nullable=False,
+        min_length=7,  # Quick pydantic validation
+        max_length=7,  # Avoids huge bd strings
+        description='Unique employee code with the following format ABC-123',
+        schema_extra={  # Ejemplo para la documentación automática
+            'example': 'EMP-001'
+        },
+    )
     status: EmployeeStatus = Field(default=EmployeeStatus.ACTIVE)
     # current_position_id: uuid.UUID | None = Field(foreign_key='positions.id')
 
@@ -36,17 +56,30 @@ class EmployeeBase(SQLModel):
 class EmployeePersonalInfoBase(SQLModel):
     first_name: str = Field(max_length=100)
     last_name: str = Field(max_length=100)
-    document_number: str | None = Field(default=None, max_length=20)
-    tax_id: str | None = Field(default=None, max_length=50)
+    document_number: str = Field(
+        max_length=20,
+        unique=True,
+        index=True,
+        nullable=False,
+        schema_extra={'example': '12345678'},
+    )
+    tax_id: str | None = Field(
+        default=None,
+        max_length=50,
+        unique=True,
+        index=True,
+    )
     gender: str | None = Field(default=None, max_length=20)
     education_level: str | None = Field(default=None, max_length=50)
-    personal_email: str = Field(sa_column=Column(String(255), unique=True, nullable=False))
-    phone: str | None = Field(default=None, max_length=50)
+    personal_email: str = Field(
+        sa_column=Column(String(255), unique=True, nullable=False, index=True)
+    )
+    phone: str | None = Field(default=None, max_length=50, unique=True, index=True)
     photo: str | None = Field(
         default=None, max_length=100, description='URL or storage key(S3/GCS)'
     )
     nickname: str | None = Field(default=None, max_length=100)
-    city: str | None = Field(default=None, max_length=50)
+    city: str | None = Field(default=None, max_length=50, index=True)
     country_id: uuid.UUID | None = Field(default=None)
     address: str | None = Field(default=None, max_length=100)
 
@@ -54,6 +87,9 @@ class EmployeePersonalInfoBase(SQLModel):
     @field_validator('personal_email', 'first_name', 'last_name', 'city')
     @classmethod
     def lower_case(cls, v: str) -> str:
+        # Verify if its null
+        if v is None:
+            return None
         return v.strip().lower()
 
     @field_validator('document_number', 'tax_id')
@@ -112,6 +148,13 @@ class EmployeeFullResponse(EmployeePublicResponse, EmployeeFinancialInfoBase):
     pass
 
 
+class EmployeePaginationResponse(BaseModel):
+    items: list[EmployeePublicResponse]
+    total: int
+    page: int
+    limit: int
+
+
 class Employee(EmployeeBase, table=True):
     # The table class inherits base fields and adds DB-specific fields
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -140,7 +183,12 @@ class Employee(EmployeeBase, table=True):
 class EmployeePersonalInfo(EmployeePersonalInfoBase, table=True):
     __tablename__ = 'employees_personal_info'
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    employee_id: uuid.UUID = Field(foreign_key='employee.id', unique=True)
+    employee_id: uuid.UUID = Field(
+        foreign_key='employee.id',
+        unique=True,
+        index=True,
+        nullable=False,
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
@@ -155,7 +203,7 @@ class EmployeeFinancialInfo(EmployeeFinancialInfoBase, table=True):
     __tablename__ = 'employee_financial_info'
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    employee_id: uuid.UUID = Field(foreign_key='employee.id', nullable=False)
+    employee_id: uuid.UUID = Field(foreign_key='employee.id', index=True, nullable=False)
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
